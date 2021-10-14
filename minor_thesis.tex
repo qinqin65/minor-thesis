@@ -81,18 +81,25 @@ supervision of {\supervisor}.
 
 \chapter*{Acknowledgements}
 
-I sincerely thank my supervisor Hai Dong for his patience and support. Without his support, this work would be difficult to continue. I also thank the GH Archive project for opening their records of the public GitHub activities from developers and repositories to everyone. Without this open project, this work would also be hard to continue. Finally, I thank my families and friends for their help and supports.
+I would like to acknowledge and express my warmest thanks to my supervisor Hai Dong for his patience and support. His support on computing resources helped me overcome the obstacle in which my laptop is too old and slow for doing the research. His valuable guidance and advice carried me through the writing of the thesis.
+
+I would also like to extend my thanks to the GH Archive project for open sourcing their dataset of the public GitHub activities of developers and repositories. The dataset provides the most similar use cases in real situations and is ideal for the research of recommending projects.
+
+I would also like to extend my thanks to my fellow students for share their ideas, suggestions and experiences in doing minor thesis projects.
+
+Finally, I thank my families and friends for their continuous help and supports.
 
 {
     \hypersetup{linkcolor=black}
     \tableofcontents
-    % \listoffigures
-    % \listoftables
+    \listoffigures
+    \listoftables
 }
 
 \pagenumbering{arabic}
 
 \chapter{Introduction}
+\section{background}
 GitHub \footnote{https://github.com} is an open-source community that enables developers to manage their repositories via a version control system named Git \footnote{https://git-scm.com/}. Developers can also share their projects and contribute to other developers’ projects in this community.
 
 The recommender system for GitHub repositories is important. Developers tend to find repositories that are similar to the ones they are working on to find functions or ideas which can be reused. Although the search engine provided by GitHub can help find similar repositories, it is always not accurate because it only uses the title of repositories rather than the whole details according to \cite{xu_repersp_2017}. While recommender systems can recommend the most relevant repositories to users based on the preference of users and repositories.
@@ -103,7 +110,23 @@ One of the approaches is to take the side information which was investigated by 
 
 Many existing works have proposed various GitHub recommender systems. But none of them can deal with the cold start problem because they ignored the use of the side information for the recommender system.
 
-This work proposed a knowledge graph neural network based model to recommend Github repositories to developers. The performance and the ability to fight data sparsity issues are promising compared with traditional recommender systems. The project of this work was open sourced on GitHub \footnote{https://github.com/qinqin65/GitHub-Repo-RS}.
+This thesis proposed a knowledge graph neural network (KGNN) based model to recommend Github repositories to developers. The performance and the ability to fight data sparsity issues are promising compared with traditional recommender systems. The project of this thesis was open sourced on GitHub \footnote{https://github.com/qinqin65/GitHub-Repo-RS}.
+
+\section{Motivation}
+There is no research in applying KGNN in recommending GitHub repositories while KGNN has the potential to bypass the data sparsity and cold start issues \cite{mansur_review_nodate}. The recent studies on the GitHub repositories recommender system are based on traditional approaches such as collaborative filtering that are prone to suffer from data sparsity and cold start issues. For solving those issues, this thesis explores the idea of using the KGNN to recommend GitHub repositories.
+
+There is various side information that can be used to build the KGNN based GitHub repositories recommender system. Users’ behaviours such as "star", "pull" and "clone" can be regarded as side information that indicates users are interested in some repositories. Repositories' programming language can also be considered as side information that guides the recommender system to recommend the repository to the user with the same programming language preference. Those side information can help the KGNN model to achieve the expected outcome.
+
+\section{Research questions}
+This research aims to propose a recommender system for GitHub repositories with high performance and the ability to solve data sparsity and cold start issues.
+
+Based on this aim, there are three research questions as list below.
+
+\begin{enumerate}
+    \item RQ1: What side information can be used to build a KGNN based repositories recommender system?
+    \item RQ2: What’s the performance can the KGNN based repositories recommender system achieve?
+    \item RQ3: How better can the KGNN based repositories recommender system mitigate the data sparsity issue?
+\end{enumerate}
 
 \chapter{Literature review}
 \section{Recommender systems}
@@ -119,7 +142,7 @@ Most GNN models use low dimensional embedding to represent node features to make
 The use of GNN in recommendation can be classified as the general recommendation and sequential recommendation \cite{wu_graph_2020}. The general recommendation can be powered by Knowledge Graph.
 
 \section{Knowledge graph neural networks}
-Knowledge Graph neural network (KGNN) is a class of GNN and has gained focus in the field of recommender systems. The side information can be presented as a knowledge graph and can be integrated into a Graph neural network to learn additional knowledge and the performance can be improved accordingly. Zhang et al. \cite{zhang_knowledge_2020} proposed a knowledge graph based approach to recommend mobile Apps and shows promising improvements in performance.
+Knowledge Graph neural network is a class of GNN and has gained focus in the field of recommender systems. The side information can be presented as a knowledge graph and can be integrated into a Graph neural network to learn additional knowledge and the performance can be improved accordingly. Zhang et al. \cite{zhang_knowledge_2020} proposed a knowledge graph based approach to recommend mobile Apps and shows promising improvements in performance.
 
 Traditional recommender systems have problems of cold start and data sparsity \cite{mansur_review_nodate, wu_graph_2020, zhang_knowledge_2020} which makes recommendation much difficult in the beginning. Some researchers make use of the side information to help the recommender system to make decisions to solve this problem. The more side information is used the more accurate the recommender system can achieve. There are various types of side information such as the high order relations of items (connect items with two or more linked attributes) \cite{wang_kgat_2019} and semantic information of user-item interactions \cite{wang_knowledge_2019} was explored by researchers. They all show a promising performance according to their papers.
 
@@ -140,20 +163,9 @@ Most papers have assumptions such as “if a user stars a repository then the us
 
 Above all, these studies used limited information and data set to build and evaluate their models. It is because the traditional approaches have limitations in using side information where the KGNN based approaches are good at.
 
-\chapter{Research questions}
-This research aims to propose a recommender system for GitHub repositories with high performance and the ability to solve data sparsity issues.
-
-Based on this aim, there are three research questions which are list below.
-
-\begin{enumerate}
-    \item RQ1: What side information can be used to build a KGNN based repositories recommender system?
-    \item RQ2: What’s the performance can the KGNN based repositories recommender system achieve?
-    \item RQ3: How better can the KGNN based repositories recommender system mitigate the data sparsity issue?
-\end{enumerate}
-
-\chapter{Methodology}
+\chapter{Methods}
 \section{Data collection}
-The data was collected from GitHub Archive \footnote{https://www.githubarchive.org/} which records activities from developers and repositories via GitHub API \footnote{https://docs.github.com/en/rest} subscriptions. GitHub API was also used in this work to collect additional information for developers and repositories such as the programming languages, user introductions, source code and readme files. The collected data set was separated into 60\% for training, 20\% for validation and 20\% for testing.
+The data was collected from GitHub Archive \footnote{https://www.githubarchive.org/} which records activities from developers and repositories via GitHub API \footnote{https://docs.github.com/en/rest} subscriptions. GitHub API was also used in this thesis to collect additional information for developers and repositories such as the programming languages, user introductions, source code and readme files. The collected data set was separated into 60\% for training, 20\% for validation and 20\% for testing.
 
 \section{Data exploration}
 The collected data set contains 4417 users and 7054 repositories. There are 42316 interactions (such as star, watch and fork) between users and repositories. The scale of the data set is small due to the quota limitations of the developer API provided by GitHub but enough for the experiment.
@@ -176,14 +188,14 @@ From the figure \ref{fig:user_repo_dist_hist} and \ref{fig:user_repo_dist_bar}, 
 
 \section{Knowledge graph neural network construction}
 \subsection{Nodes and edges selection}
-This work constructed a heterogeneous graph to model the relationship between users and repositories by using Deep Graph Library \cite{wang2019dgl}. The nodes of the graph are users and repositories. There are 4 types of edges in the graph which are "watch", "star", "fork" and "own". "watch" means a user watches a repository. "star" means a user stars a repository. "fork" means a user forks a repository. "own" means a user is the owner of a repository. 
+This thesis constructed a heterogeneous graph to model the relationship between users and repositories by using Deep Graph Library \cite{wang2019dgl}. The nodes of the graph are users and repositories. There are 4 types of edges in the graph which are "watch", "star", "fork" and "own". "watch" means a user watches a repository. "star" means a user stars a repository. "fork" means a user forks a repository. "own" means a user is the owner of a repository. 
 
 There are respectively 4 types of reverse relationships that are "watched-by", "starred-by", "forked-by" and "owned-by" between repositories and users. They are presented in the graph as the reverse edges for the aforementioned 4 types of edges. This is for the convenience of message passing and node aggregation during the training process.
 
-Another research \cite{sun_personalized_2018} assigned the 4 types of edges with different scores in which the "watch" has the lowest score and the "own" has the highest score. This is a traditional rating based recommendation in which a high score is prefered and a lower one should be avoided. However, this work assigns those 4 types of edges with the same weight. Since any types of interactions between users and repositories should be interpreted as that a user is interested in a repository. It is different to the traditional recommendation in which a low score indicates that a user dislikes an item.
+Another research \cite{sun_personalized_2018} assigned the 4 types of edges with different scores in which the "watch" has the lowest score and the "own" has the highest score. This is a traditional rating based recommendation in which a high score is prefered and a lower one should be avoided. However, this thesis assigns those 4 types of edges with the same weight. Since any types of interactions between users and repositories should be interpreted as that a user is interested in a repository. It is different to the traditional recommendation in which a low score indicates that a user dislikes an item.
 
 \section{Feature selection and presenting}
-This work selected 3 features for users and 19 features for repositories. 
+This thesis selected 3 features for users and 19 features for repositories. 
 
 The 3 selected features of users are shown in the table \ref{tab:user_features}. The company was selected because the users from the same company may share the same interest. The location may help the neural network to recommend the repositories with the relevant natural languages. Users may write their hobbies and favourite programming languages in the 'bio' and a neural network thus can learn some hidden relationship between users.
 
@@ -228,7 +240,7 @@ The 18 features for repositories are shown in table \ref{tab:repo_features}. Som
     \label{tab:repo_features}
 \end{center}
 
-Some features are strings that cannot be directly presented as inputs of the neural network. This work encoded them as vectors with the length of 50 bits by using a doc2vec model \cite{rehurek_lrec}. The vectors encoded by this model have an interesting property in which the vector distance of the strings with a similar meaning is close while the vector distance of strings with an opposite meaning is far away. This is helpful for the neural network to learn some potential relationships between repositories. The length of 50 bits is used because it is long enough to present the meaning of strings and not so robust for a neural network. All features are normalized. This is to prevent the neural network from biasing to some features with higher values.
+Some features are strings that cannot be directly presented as inputs of the neural network. This thesis encoded them as vectors with the length of 50 bits by using a doc2vec model \cite{rehurek_lrec}. The vectors encoded by this model have an interesting property in which the vector distance of the strings with a similar meaning is close while the vector distance of strings with an opposite meaning is far away. This is helpful for the neural network to learn some potential relationships between repositories. The length of 50 bits is used because it is long enough to present the meaning of strings and not so robust for a neural network. All features are normalized. This is to prevent the neural network from biasing to some features with higher values.
 
 Finally, the nodes, edges and normalized features are combined to form a heterogeneous graph.
 
@@ -236,12 +248,12 @@ Finally, the nodes, edges and normalized features are combined to form a heterog
 The training, validation and testing subgraph were constructed from the aforementioned heterogeneous graph. This is to tune and test the neural network. The subgraphs were constructed through edge sampling with a ratio of 60:20:20 for training, validation and testing.
 
 \subsection{Negative sampling}
-To prevent the trained embeddings from folding, negative sampling is necessary. This work sampled negative edges of the same size as the positive edges. The negative training, validation and testing graph were constructed from those negative edges.
+To prevent the trained embeddings from folding, negative sampling is necessary. This thesis sampled negative edges of the same size as the positive edges. The negative training, validation and testing graph were constructed from those negative edges.
 
 \subsection{Neural network design}
 The neural network for the knowledge graph contains 3 layers which are the embedding layer, hidden layer and output layer. The embedding layer contains 2 sub single layer neural networks that are used to embedding users and repositories respectively. The hidden layer is a graph convolutional network (GCN) \cite{kipf_semi-supervised_2017} layer that contains 4 sub GCN layers for the 4 types of edges. The output of the 4 GCNs of the hidden layer will be aggregated with the sum aggregation. The output layer is also a GCN layer that contains 4 sub GCN layers. The output of the 4 GCNs of the output layer will also be aggregated with the sum aggregation. The output contains learned users representation and repositories representation.
 
-Nodes in GCN will go through the process of message passing and aggregation with their neighbour nodes to get their new representation. In the process of message passing, every neighbour of a node sends its representation to the current node. In the process of aggregation, the current node aggregates the representation vectors received. The aggregation function has many types such as concatenate, sum and max. This work used sum aggregation. After the aggregation, the result will go through an activation function and then a new representation for the current node is acquired. This is to let nodes learn the most important parts from their neighbours just like a recurrent neural network (RNN) learns the most important part from the past. According to the Banach
+Nodes in GCN will go through the process of message passing and aggregation with their neighbour nodes to get their new representation. In the process of message passing, every neighbour of a node sends its representation to the current node. In the process of aggregation, the current node aggregates the representation vectors received. The aggregation function has many types such as concatenate, sum and max. This thesis used sum aggregation. After the aggregation, the result will go through an activation function and then a new representation for the current node is acquired. This is to let nodes learn the most important parts from their neighbours just like a recurrent neural network (RNN) learns the most important part from the past. According to the Banach
 fixed point theorem \cite{Khamsi_2001}, the process of message passing and aggregation will eventually converge to a fixed point. The equation \ref{eq:message_passing_aggregation} depicts this process.
 
 \begin{equation}
@@ -254,7 +266,7 @@ The $h_u$ means the representation of the current node. The $\delta$ means the a
 The learned representation vectors should be similar for nodes who have positive edges and dissimilar for those who have negative edges. The similarity is measured by their cosine similarity. The recommendation will be those with the highest similarity score.
 
 \subsection{Loss function design}
-To make the neural network learn to output those representations, this work used a hinge loss function as shown in equation \ref{eq:loss_function}.
+To make the neural network learn to output those representations, this thesis used a hinge loss function as shown in equation \ref{eq:loss_function}.
 
 \begin{equation}
     l=\frac{1}{m\cdot{e}}\sum_{i=1}^{m}\sum_{j}^{e} max(0, f(n_u, n_v)+\Delta-f(p_u, p_v))
@@ -264,7 +276,7 @@ To make the neural network learn to output those representations, this work used
 The $m$ means the number of types of edges (in this case it is 4). The $e$ means the number of edges. The $f$ means the cosine similarity. The $n_u$ and $n_v$ means the source and destination nodes for the negative edge $j$. The $p_u$ and $p_v$ means the source and destination nodes for the positive edge $j$. The $\Delta$ means the error tolerance.
 
 \subsection{Problem framing}
-This work proposed a model for the recommendation of repositories as a link prediction in a heterogeneous graph. The neural network predicts whether the link between a user and a repository exists. If the link exists then recommend the repository to the user.
+This thesis proposed a model for the recommendation of repositories as a link prediction in a heterogeneous graph. The neural network predicts whether the link between a user and a repository exists. If the link exists then recommend the repository to the user.
 
 \section{Baseline models}
 \subsection{TF-IDF approach}
@@ -284,7 +296,7 @@ A collaborative approach \cite{guendouz_recommending_2015} was also used as a ba
 % \subsection{Neural network based ranking model}
 
 \subsection{Random recommendation}
-Since traditional recommender systems suffer from data sparsity. They may end up in a poor performance during evaluation. To determine whether they work or not, this work used a random recommender as a contrast model. The poor performance models should be at least better than a random recommender model.
+Since traditional recommender systems suffer from data sparsity. They may end up in a poor performance during evaluation. To determine whether they work or not, this thesis used a random recommender as a contrast model. The poor performance models should be at least better than a random recommender model.
 
 \chapter{Results and Discussion}
 \section{Training results}
