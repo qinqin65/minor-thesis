@@ -104,18 +104,18 @@ GitHub \footnote{https://github.com} is an open-source community that enables de
 
 The recommender system for GitHub repositories is important. Developers tend to find repositories that are similar to the ones they are working on to find functions or ideas which can be reused. Although the search engine provided by GitHub can help find similar repositories, it is always not accurate because it only uses the title of repositories rather than the whole details according to \cite{xu_repersp_2017}. While recommender systems can recommend the most relevant repositories to users based on the preference of users and repositories.
 
-Most recommender systems have data sparsity and cold start issues. Due to the long tail effect, few popular products have the most ratings while lots of others have fewer ratings. As a result, the constructed user-item matrix is sparse. It is inefficient for a model to deal with a sparse matrix. If a user does not rate any items then it is hard for the recommender system to recommend items to that user. This is the cold start issue. Because in the beginning, there are always few ratings. Researchers have proposed various approaches to tackle these issues.
+\textit{Most recommender systems have data sparsity and cold start issues.} Due to the long tail effect, few popular products have the most ratings while lots of others have fewer ratings. As a result, the constructed user-item matrix is sparse. It is inefficient for a model to deal with a sparse matrix. If a user does not rate any items then it is hard for the recommender system to recommend items to that user. This is the cold start issue. Because in the beginning, there are always few ratings. Researchers have proposed various approaches to tackle these issues.
 
 One of the approaches is to take the side information which was investigated by \cite{jonschkowski_patterns_2016} of users and items into consideration. Side information can be efficiently integrated into a knowledge graph neural network. With more information that can be used to determine a user's preference, a recommender system thus can fight for data sparsity issues and improve performance. The improvements are promising according to \cite{zhang_knowledge_2020} which applied side information and knowledge graph neural network in mobile APP recommendations.
 
-Many existing works have proposed various GitHub recommender systems. But none of them can deal with the cold start problem because they ignored the use of the side information for the recommender system.
+Many existing works have proposed various GitHub recommender systems. \textit{But none of them can deal with the cold start problem because they ignored the use of the side information for the recommender system.}
 
 This thesis proposed a knowledge graph neural network (KGNN) based model to recommend Github repositories to developers. The performance and the ability to fight data sparsity issues are promising compared with traditional recommender systems. The project of this thesis was open sourced on GitHub \footnote{https://github.com/qinqin65/GitHub-Repo-RS}.
 
 \section{Motivation}
-There is no research in applying KGNN in recommending GitHub repositories while KGNN has the potential to bypass the data sparsity and cold start issues \cite{mansur_review_nodate}. The recent studies on the GitHub repositories recommender system are based on traditional approaches such as collaborative filtering that are prone to suffer from data sparsity and cold start issues. For solving those issues, this thesis explores the idea of using the KGNN to recommend GitHub repositories.
+\textit{There is no research in applying KGNN in recommending GitHub repositories while KGNN has the potential to bypass the data sparsity and cold start issues} \cite{mansur_review_nodate}. The recent studies on the GitHub repositories recommender system are based on traditional approaches such as collaborative filtering that are prone to suffer from data sparsity and cold start issues. \textit{For solving those issues, this thesis explores the idea of using the KGNN to recommend GitHub repositories.}
 
-There is various side information that can be used to build the KGNN based GitHub repositories recommender system. Users’ behaviours such as "star", "pull" and "clone" can be regarded as side information that indicates users are interested in some repositories. Repositories' programming language can also be considered as side information that guides the recommender system to recommend the repository to the user with the same programming language preference. Those side information can help the KGNN model to achieve the expected outcome.
+\textit{There is various side information that can be used to build the KGNN based GitHub repositories recommender system.} Users’ behaviours such as "star", "pull" and "clone" can be regarded as side information that indicates users are interested in some repositories. Repositories' programming language can also be considered as side information that guides the recommender system to recommend the repository to the user with the same programming language preference. Those side information can help the KGNN model to achieve the expected outcome.
 
 \section{Research questions}
 This research aims to propose a recommender system for GitHub repositories with high performance and the ability to solve data sparsity and cold start issues.
@@ -163,7 +163,10 @@ Most papers have assumptions such as “if a user stars a repository then the us
 
 Above all, these studies used limited information and data set to build and evaluate their models. It is because the traditional approaches have limitations in using side information where the KGNN based approaches are good at.
 
-\chapter{Methods}
+\chapter{Preliminary}
+\section{Problem Formulation}
+This thesis proposed a model for the recommendation of repositories as a link prediction in a heterogeneous graph. The neural network predicts whether the link between a user and a repository exists. If the link exists then recommend the repository to the user.
+
 \section{Data collection}
 The data was collected from GitHub Archive \footnote{https://www.githubarchive.org/} which records activities from developers and repositories via GitHub API \footnote{https://docs.github.com/en/rest} subscriptions. GitHub API was also used in this thesis to collect additional information for developers and repositories such as the programming languages, user introductions, source code and readme files. The collected data set was separated into 60\% for training, 20\% for validation and 20\% for testing.
 
@@ -186,7 +189,8 @@ From the figure \ref{fig:user_repo_dist_hist} and \ref{fig:user_repo_dist_bar}, 
     \label{fig:user_repo_dist_bar}
 \end{figure}
 
-\section{Knowledge graph neural network construction}
+\chapter{Methods}
+\section{Knowledge graph construction}
 \subsection{Nodes and edges selection}
 This thesis constructed a heterogeneous graph to model the relationship between users and repositories by using Deep Graph Library \cite{wang2019dgl}. The nodes of the graph are users and repositories. There are 4 types of edges in the graph which are "watch", "star", "fork" and "own". "watch" means a user watches a repository. "star" means a user stars a repository. "fork" means a user forks a repository. "own" means a user is the owner of a repository. 
 
@@ -194,7 +198,7 @@ There are respectively 4 types of reverse relationships that are "watched-by", "
 
 Another research \cite{sun_personalized_2018} assigned the 4 types of edges with different scores in which the "watch" has the lowest score and the "own" has the highest score. This is a traditional rating based recommendation in which a high score is prefered and a lower one should be avoided. However, this thesis assigns those 4 types of edges with the same weight. Since any types of interactions between users and repositories should be interpreted as that a user is interested in a repository. It is different to the traditional recommendation in which a low score indicates that a user dislikes an item.
 
-\section{Feature selection and presenting}
+\subsection{Feature selection and presenting}
 This thesis selected 3 features for users and 19 features for repositories. 
 
 The 3 selected features of users are shown in the table \ref{tab:user_features}. The company was selected because the users from the same company may share the same interest. The location may help the neural network to recommend the repositories with the relevant natural languages. Users may write their hobbies and favourite programming languages in the 'bio' and a neural network thus can learn some hidden relationship between users.
@@ -244,7 +248,7 @@ Some features are strings that cannot be directly presented as inputs of the neu
 
 Finally, the nodes, edges and normalized features are combined to form a heterogeneous graph.
 
-\subsection{Trainng, validation and testing sub graphs}
+\subsection{Training, validation and testing sub graphs}
 The training, validation and testing subgraph were constructed from the aforementioned heterogeneous graph. This is to tune and test the neural network. The subgraphs were constructed through edge sampling with a ratio of 60:20:20 for training, validation and testing.
 
 \subsection{Negative sampling}
@@ -264,7 +268,7 @@ The $h_u$ means the representation of the current node. The $\delta$ means the a
 
 The learned representation vectors should be similar for nodes who have positive edges and dissimilar for those who have negative edges. The similarity is measured by their cosine similarity. The recommendation will be those with the highest similarity score.
 
-\subsection{Loss function design}
+\subsection{Loss function}
 To make the neural network learn to output those representations, this thesis used a hinge loss function as shown in equation \ref{eq:loss_function}.
 
 \begin{equation}
@@ -274,11 +278,12 @@ To make the neural network learn to output those representations, this thesis us
 
 The $m$ means the number of types of edges (in this case it is 4). The $e$ means the number of edges. The $f$ means the cosine similarity. The $n_u$ and $n_v$ means the source and destination nodes for the negative edge $j$. The $p_u$ and $p_v$ means the source and destination nodes for the positive edge $j$. The $\Delta$ means the error tolerance.
 
-\subsection{Problem framing}
-This thesis proposed a model for the recommendation of repositories as a link prediction in a heterogeneous graph. The neural network predicts whether the link between a user and a repository exists. If the link exists then recommend the repository to the user.
+\subsection{Training}
 
-\section{Baseline models}
-\subsection{TF-IDF approach}
+\subsection{Hyper parameters tuning}
+
+\chapter{Baseline models}
+\section{TF-IDF approach}
 A TF-IDF approach proposed by \cite{sun_personalized_2018} was used as a baseline model for the evaluation of the KGNN based model. TF-IDF means term frequency and inverse document frequency which calculates the ratio between the frequency of the appearance of a term and the frequency of documents that contains the term. It can be used to measure the similarity between documents. The tf-idf vectors of documents with a similar topic tend to be similar.
 
 This TF-IDF approach calculates the TF-IDF vectors for readme files and source code for all repositories. Then the 2 similarity matrices between repositories are carried out (one for the readme files and another one for the source code). The final similarity score between repositories is calculated by combining the 2 matrices using the equation \ref{eq:sim_repositories}. After the calculation of the similarity matrix, the algorithm recommends the most similar repositories to users.
@@ -289,12 +294,12 @@ This TF-IDF approach calculates the TF-IDF vectors for readme files and source c
     \label{eq:sim_repositories}
 \end{gather}
 
-\subsection{Collaborate filtering approach}
+\section{Collaborate filtering approach}
 A collaborative approach \cite{guendouz_recommending_2015} was also used as a baseline model for the evaluation of the KGNN based model. This approach measures the similarities between users and recommends the most "co-rated" repositories from the most similar users. The similarity measurement is the number of interactions (such as the number of stars).
 
 % \subsection{Neural network based ranking model}
 
-\subsection{Random recommendation}
+\section{Random recommendation}
 Since traditional recommender systems suffer from data sparsity. They may end up in a poor performance during evaluation. To determine whether they work or not, this thesis used a random recommender as a contrast model. The poor performance models should be at least better than a random recommender model.
 
 \chapter{Results and Discussion}
@@ -370,12 +375,13 @@ From the table \ref{tab:hitrate_10_cf}, we can see that the performance is also 
 
 \begin{center}
     \captionof{table}{Hit rate@top 10 for the collaborative filtering approach}
-    \begin{tabular}{| l | l | l | l | l | l |}
+    \begin{tabular}{l | l | l | l | l | l}
     \hline
-    Top k & Overall & Group 0 to 5 & Group 5 to 10 & Group 10 to 15 & Group 15 to 20 \\ \hline
-    10 & 0.063 & 0.066 & 0.060 & 0.023 & 0.021 \\ \hline
-    15 & 0.073 & 0.077 & 0.077 & 0.019 & 0.016 \\ \hline
-    20 & 0.085 & 0.089 & 0.095 & 0.019 & 0.013 \\ \hline
+    Top k & Overall & Group 0 to 5 & Group 5 to 10 & Group 10 to 15 & Group 15 to 20 \\
+    \hline
+    10 & 0.063 & 0.066 & 0.060 & 0.023 & 0.021 \\
+    15 & 0.073 & 0.077 & 0.077 & 0.019 & 0.016 \\
+    20 & 0.085 & 0.089 & 0.095 & 0.019 & 0.013 \\
     \end{tabular}
     \label{tab:hitrate_10_cf}
 \end{center}
