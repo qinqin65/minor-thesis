@@ -167,10 +167,10 @@ An approach proposed by \cite{zhang_detecting_2017} are based on some assumption
 
 Above all, these studies used limited information and data set to build and evaluate their models. It is because the traditional approaches have limitations in using side information.
 
-\chapter{Problem Formulation}
+\chapter{Methods}
+\section{Problem Formulation}
 This thesis proposed a model for the recommendation of repositories as a link prediction in a heterogeneous graph. The neural network predicts whether the link between a user and a repository exists. If the link exists then recommend the repository to the user.
 
-\chapter{Methods}
 \section{Knowledge graph construction}
 \subsection{Nodes and edges selection}
 This thesis constructed a heterogeneous graph to model the relationship between users and repositories by using Deep Graph Library (DGL) \cite{wang2019dgl}. The nodes of the graph are users and repositories. The table \ref{tab:edge_types} shows 4 types of edges in the graph. "watch" means a user watches a repository. "star" means a user stars a repository. "fork" means a user forks a repository. "own" means a user is the owner of a repository. 
