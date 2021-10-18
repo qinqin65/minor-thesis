@@ -167,13 +167,10 @@ An approach proposed by \cite{zhang_detecting_2017} are based on some assumption
 
 Above all, these studies used limited information and data set to build and evaluate their models. It is because the traditional approaches have limitations in using side information.
 
-\chapter{Methods}
-\section{Problem Formulation}
-This thesis proposed a model for the recommendation of repositories as a link prediction in a heterogeneous graph. The neural network predicts whether the link between a user and a repository exists. If the link exists then recommend the repository to the user.
+\chapter{Notations and Problem Formulation}
+Knowledge graph (KG) can be represented as entity-relation-entity triples $(head, relation, tail)$. The "head" and "tail" are entities. The "relation" is the relationship between the two entities. For example, $(user1, star, repository2)$ means that the user named "user1" starred the repository named "repository2". The relation "star" indicates how a user interacts with a repository. The relation in the entity-relation-entity triples is the same as the edge in the graph structure.
 
-\section{Knowledge graph construction}
-\subsection{Nodes and edges selection}
-This thesis constructed a heterogeneous graph to model the relationship between users and repositories by using Deep Graph Library (DGL) \cite{wang2019dgl}. The nodes of the graph are users and repositories. The table \ref{tab:edge_types} shows 4 types of edges in the graph. "watch" means a user watches a repository. "star" means a user stars a repository. "fork" means a user forks a repository. "own" means a user is the owner of a repository. 
+We explored 2 types of entities and 4 types of relations. They are shown in the table \ref{tab:edge_types}. "User" means users from GitHub. "Repository" means the repositories that are stored on GitHub. "watch" means an user watches a repository. "star" means an user stars a repository. "fork" means an user forks a repository. "own" means an user is the owner of a repository. 
 
 \begin{center}
     \captionof{table}{Four types of edges}
@@ -189,7 +186,7 @@ This thesis constructed a heterogeneous graph to model the relationship between 
     \label{tab:edge_types}
 \end{center}
 
-Since edges in graphs created by the DGL library have directions. This thesis added 4 types of reverse relationships that are list in the table \ref{tab:reverse_edge_types}. They are presented in the graph as the reverse edges for the aforementioned 4 types of edges. This is to make the graph undirected.
+Since relation in triples is directed. We added 4 types of reverse relations that are listed in the table \ref{tab:reverse_edge_types}. They are presented in the graph as the reverse edges for the aforementioned 4 types of edges. This is to simplify the process of message passing and aggregation for the 2 types of entities in the training process.
 
 \begin{center}
     \captionof{table}{Four reverse types of edges}
@@ -205,12 +202,7 @@ Since edges in graphs created by the DGL library have directions. This thesis ad
     \label{tab:reverse_edge_types}
 \end{center}
 
-Another research \cite{sun_personalized_2018} assigned the 4 types of edges with different scores in which the "watch" has the lowest score and the "own" has the highest score. This is a traditional rating based recommendation in which a high score is prefered and a lower one should be avoided. However, this thesis assigns those 4 types of edges with the same weight. Since any types of interactions between users and repositories should be interpreted as that a user is interested in a repository. It is different to the traditional recommendation in which a lower score indicates that a user dislikes an item.
-
-\subsection{Feature selection and presenting}
-This thesis selected 3 features for users and 19 features for repositories. 
-
-The 3 selected features of users are shown in the table \ref{tab:user_features}. The company was selected because the users from the same company may share the same interest. The location may help the neural network to recommend the repositories with the relevant natural languages. Users may write their hobbies and favourite programming languages in the 'bio' and a neural network may learn some hidden relationship between users.
+Users and repositories have features such as users' company name and repositories' description. We selected 3 features for users and 18 features for repositories as side information. The selected features are listed in the table \ref{tab:user_features} and \ref{tab:repo_features}.
 
 \begin{center}
     \captionof{table}{The selected features of users}
@@ -224,8 +216,6 @@ The 3 selected features of users are shown in the table \ref{tab:user_features}.
     \end{tabular}
     \label{tab:user_features}
 \end{center}
-
-The 18 features for repositories are shown in table \ref{tab:repo_features}.
 
 \begin{center}
     \captionof{table}{The selected features of repositories}
@@ -255,27 +245,82 @@ The 18 features for repositories are shown in table \ref{tab:repo_features}.
     \label{tab:repo_features}
 \end{center}
 
-Some features are strings that cannot be directly presented as inputs of the neural network. This thesis encoded them as vectors with the length of 50 bits by using a doc2vec model \cite{rehurek_lrec}. The vectors encoded by this model have an interesting property in which the vector distance of the strings with a similar meaning is close while the vector distance of strings with an opposite meaning is far away. This is helpful for the neural network to learn some potential relationships between repositories. The length of 50 bits is used because it is long enough to present the meaning of strings and not so robust for a neural network. All features are normalized. This is to prevent the neural network from biasing to some features with higher values.
+We formulated the recommendation problem as follows. Given the input of KG $\mathcal{G}$ that is constructed from users, repositories and their side information, predict the probability $\hat{y}_r^u$ in which users interacts with their future unseen repositories. This can be formulated as the equation \ref{eq:problem_framing}. The $\mathcal{F}$ denotes the prediction function. The $\theta$ denotes the parameters of the function.
 
-Finally, the nodes, edges and normalized features are combined to form a heterogeneous graph.
+\begin{equation}
+    \hat{y}_r^u=\mathcal{F}(\mathcal{G}|\theta)
+    \label{eq:problem_framing}
+\end{equation}
 
-\section{Training, validation and testing sub graphs}
-The training, validation and testing subgraph were constructed from the aforementioned heterogeneous graph. This is to tune and test the neural network. The subgraphs were constructed through edge sampling with a ratio of 60:20:20 for training, validation and testing.
+\chapter{Methods}
+\section{Solution overview}
+The framework of the KGNN model was shown in the figure \ref{fig:kgnn_framework}. There are mainly 4 steps that are KG construction, neural network calculation, prediction and training. The KG construction step construct the KG from users, repositories and side information by using the Deep Graph Library (DGL) \cite{wang2019dgl}. The neural network calculation step calculates the representation of users and repositories based on the inputs from the KG. The prediction step first calculates the cosine similarity between the representation of users and repositories, then recommends the most similar repositories to users. The training step calculates the loss from the prediction and update the parameters of the neural network. The steps of neural network calculation, prediction and training forms a loop. The parameters are updated and the loss is reduced through the loop.
 
-\section{Negative edges sampling}
-To prevent the trained embeddings from folding, negative sampling is necessary. This thesis sampled negative edges of the same size as the positive edges. The negative training, validation and testing graph were constructed from those negative edges.
+There are also some minor processes. Such as sub graph construction, negative edges sampling and hyper parameters tuning. The step of the sub graph construction splits the constructed KG into training, validation and testing sub graphs. This is to train and tune the neural network. The step of the negative edge sampling randomly generates false edges, which do not exist in the real data set, between users and repositories. This is to make the neural network learn to avoid folding \cite{xin_folding_2017} in which the neural network may recommend a repository to an irrelevant user. The hyper parameters tuning step tuned the learning rate and drop out rate to maximize the learning performance of the neural network. We will detail them in the following sections.
+ 
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.4]{KGCN Overview.png}
+    \caption{The framework of the KGNN model}
+    \label{fig:kgnn_framework}
+\end{figure}
+
+\section{KG construction}
+The collected users and repositories are numbered starting from 0 and presented in a form of tuple. The equation \ref{eq:users_tupple} indicates that there are $m$ users. The equation \ref{eq:repos_tupple} indicates that there are $n$ repositories. The tupples for the users and repositories then are inputted into the construction method provided by the DGL to create a graph object. 
+
+\begin{equation}
+    (0, 1, 2, ..., m)
+    \label{eq:users_tupple}
+\end{equation}
+
+\begin{equation}
+    (0, 1, 2, ..., n)
+    \label{eq:repos_tupple}
+\end{equation}
+
+We encoded the features of the users and repositories to numbers since the neural network only accepts numbers. For example, the company name of an user is a string and cannot be inputted into a neural network directly. We convert strings to numbers by using a doc2vec model \cite{le_distributed_nodate} provided by Gensim \cite{rehurek_lrec} that converts variable lengths of strings into a fixed length of vectors. According to \cite{mikolov_efficient_2013}, the converted vectors is the representation of the strings. Some features are already numbers such as the size of the repository. So, no further processes needed. Some boolean features such as "has\_wiki" are encoded as 1 and 0 that respectively means true and false. The encoded features are then normalized between 0 and 1.
+
+The features of the users and repositories are presented as a matrix in which the rows indicates users or repositories and the columns indicates their features. The matrix \ref{matrix:user_feature} indicates that there are $m$ users and each user has a feature of dimension $n$. The matrix \ref{matrix:repo_feature} indicates that there are $j$ repositories and each repository has a feature of dimension $k$. The 2 matrices are attached to the graph object created above.
+
+\begin{equation}
+    \begin{bmatrix}
+        1 & 0 & .3 & .5 & ... & n \\
+        0 & .4 & 1 & .6 & ... & n \\
+        . & . & . & . & ... & n \\
+        . & . & . & . & ... & n \\
+        . & . & . & . & ... & n \\
+        m & m1 & m2 & m2 & ... & n
+        \label{matrix:user_feature}
+    \end{bmatrix}
+\end{equation}
+
+\begin{equation}
+    \begin{bmatrix}
+        1 & 0 & .3 & .5 & ... & k \\
+        0 & .4 & 1 & .6 & ... & k \\
+        . & . & . & . & ... & k \\
+        . & . & . & . & ... & k \\
+        . & . & . & . & ... & k \\
+        j & j1 & j2 & j2 & ... & k
+        \label{matrix:repo_feature}
+    \end{bmatrix}
+\end{equation}
+
+The training, validation and testing subgraph were constructed from the aforementioned heterogeneous graph. The subgraphs were constructed through edge sampling with a ratio of 60:20:20 for training, validation and testing.
+
+We sampled negative edges with the amount as the same as the positive edges. The negative training, validation and testing graph were constructed from those negative edges.
 
 \section{Neural network design}
-Figure \ref{fig:kgnn_structure} shows the structure of the KGNN model. The neural network for the knowledge graph contains 3 layers that are the embedding layer, hidden layer and output layer. The embedding layer contains 2 sub single layer neural networks that are used to embedding users and repositories. The hidden layer is a graph convolutional network (GCN) \cite{kipf_semi-supervised_2017} layer that contains 4 sub GCN layers for the 4 types of edges. The output of the 4 GCNs of the hidden layer will be aggregated with the sum aggregation. The output layer is also a GCN layer that contains 4 sub GCN layers. The output of the 4 GCNs of the output layer will also be aggregated with the sum aggregation. The output contains learned users representation and repositories representation.
+Figure \ref{fig:kgnn_structure} shows the structure of the KGNN model. The neural network for the knowledge graph contains 3 layers that are the embedding layer, hidden layer and output layer. The embedding layer contains 2 sub single layer neural networks that are used to embedding users and repositories. The hidden layer is a graph convolutional network (GCN) \cite{kipf_semi-supervised_2017} layer that contains 4 sub GCN layers respectively for the 4 types of edges. The output of the 4 GCNs of the hidden layer will be aggregated with the sum aggregation. The output layer is also a GCN layer that contains 4 sub GCN layers. The output of the 4 GCNs of the output layer will also be aggregated with the sum aggregation. The output contains learned users' representation and repositories' representation.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[scale=0.7]{KGCN Structure.png}
+    \includegraphics[scale=0.6]{KGCN Structure.png}
     \caption{The neural network structure of the KGNN model}
     \label{fig:kgnn_structure}
 \end{figure}
 
-Nodes in GCN will go through the process of message passing and aggregation with their neighbour nodes to get their new representation. In the process of message passing, every neighbour of a node sends its representation to the current node. In the process of aggregation, the current node aggregates the representation vectors received. The aggregation function has many types such as concatenate, sum and max. This thesis used sum aggregation. After the aggregation, the result will go through an activation function and calculate the new representation for the current node. The equation \ref{eq:message_passing_aggregation} depicts this process.
+Nodes in the GCN will go through the process of message passing and aggregation with their neighbour nodes to get their new representation. In the process of message passing, every neighbour of a node sends its representation to the current node. In the process of aggregation, the current node aggregates the representation vectors received. We used sum aggregation as the aggregation function. After the aggregation, the result will go through an activation function and calculate the new representation for the current node. The equation \ref{eq:message_passing_aggregation} depicts this process.
 
 \begin{equation}
     h_u^{n+1}=\delta(sum(h_u^n, \sum_{v\in{N(u)}}h_v^n))
@@ -284,10 +329,10 @@ Nodes in GCN will go through the process of message passing and aggregation with
 
 The $h_u$ means the representation of the current node. The $\delta$ means the activation function. The $N(u)$ means the neighbour nodes of the current node. The $h_v$ means one of the neighbour nodes of the current node.
 
-The learned representation vectors should be similar for nodes who have positive edges and dissimilar for those who have negative edges.
+The output representation vectors of the neural network should be similar for nodes who have positive edges and dissimilar for those who have negative edges.
 
-\section{Recommendation}
-The recommendation process uses the learned representation vectors of users and repositories to calculate the similarity score between them. The recommender system then recommends the top $K$ most similar repositories to users.
+\section{Prediction}
+The prediction process uses the learned representation vectors of users and repositories to calculate the similarity score between them. The recommender system then recommends the top $K$ most similar repositories to users.
 
 The similarity score is measured by using cosine similarity. The equation \ref{eq:cosine_similarity} shows how the similarity score is calculated. The $u$ and $r$ means "User" and "Repository". The $h_u$ and $h_r$ means the learned representation of users and repositories.
 
@@ -296,36 +341,65 @@ The similarity score is measured by using cosine similarity. The equation \ref{e
     \label{eq:cosine_similarity}
 \end{equation}
 
-\section{Loss function}
-To make the neural network learn to output those representations, this thesis used a hinge loss function as shown in the equation \ref{eq:loss_function}.
+\section{Training}
+\subsection{Loss function}
+To make the neural network learn to output the expected representations, we used a hinge loss function as shown in the equation \ref{eq:loss_function}.
 
 \begin{equation}
     l=\frac{1}{m\cdot{e}}\sum_{i=1}^{m}\sum_{j}^{e} max(0, f(n_u, n_v)+\Delta-f(p_u, p_v))
     \label{eq:loss_function}
 \end{equation}
 
-The $m$ means the number of types of edges (in this case it is 4). The $e$ means the number of edges. The $f$ means the cosine similarity. The $n_u$ and $n_v$ means the source and destination nodes for the negative edge $j$. The $p_u$ and $p_v$ means the source and destination nodes for the positive edge $j$. The $\Delta$ means the error tolerance.
+The $m$ means the number of types of edges (in this case it is 4). The $e$ means the number of edges. The $f$ means the cosine similarity. The $n_u$ and $n_v$ means the source and destination nodes for the negative edge $j$. The $p_u$ and $p_v$ means the source and destination nodes for the positive edge $j$. The $\Delta$ is the correction parameter that prevents the loss from becoming zero.
 
-\section{Training}
-The KGNN was trained with the PyTorch library in 100 epochs. The figure \ref{fig:training_results} shows that the loss stays stable at around 0.027 when the epoch is around 60.
+\subsection{Evaluation metric}
+We use AUC score to evaluate the training process. The AUC score is calculated as the area under the ROC curve. It has the range of 0 to 1. The higher the score means the better the performance.
+
+\subsection{Training results}
+The KGNN was trained with the PyTorch library and Adam optimizer in 100 epochs. We found that the training loss decreased sharply at the beginning and stays stable at around the epoch of 80 (see \ref{fig:training_loss}). However, the validation loss is always lower than the training loss. This is because the drop out behaviour of the neural network is suspended when calculating the validation loss. So, the validation loss can be lower than the training loss. Also, the validation graph has fewer edges than that of the training graph. It leads to fewer positive numbers in the loss and the hinge loss function simply ignores the numbers below 0. 
+
+From the figure \ref{fig:training_loss} and \ref{fig:auc}, we can see that the validation loss does not change too much after 40 epochs and the AUC score decreases after 60 epochs. It indicates that we can stop training at the epoch of around 40 to 60.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[scale=0.9]{training_results.png}
-    \caption{The training results of the KGNN}
-    \label{fig:training_results}
+    \includegraphics[scale=0.9]{loss.png}
+    \caption{The training and validation loss of the KGNN}
+    \label{fig:training_loss}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.9]{auc.png}
+    \caption{The AUC score}
+    \label{fig:auc}
 \end{figure}
 
 \section{Hyper parameters tuning}
 \subsection{Learning rate}
+We tuned the neural network with different learning rates. The result can be seen from the figure \ref{fig:auc_learning_rate}. The learning rate of 0.01 can achieve the best result.
 
-\subsection{Vector length}
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.9]{auc_learning_rate.png}
+    \caption{The AUC score under different learning rates}
+    \label{fig:auc_learning_rate}
+\end{figure}
 
 \subsection{Drop out}
+To prevent the model from becoming overcomplicated, we added drop out layers between the embedding layer, hidden layer and out layer. We tested different drop out rates and found that when the drop out rate is 0.4 the neural network can achieve a better result (see \ref{fig:auc_drop_out_rate}).
 
-\subsection{Regularization}
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.9]{auc_drop_out_rate.png}
+    \caption{The AUC score under different drop out rates}
+    \label{fig:auc_drop_out_rate}
+\end{figure}
 
-\subsection{Feature selection}
+% \subsection{Vector length}
+
+% \subsection{Regularization}
+
+% \subsection{Feature selection}
 
 \chapter{Results and Discussion}
 \section{Data collection}
@@ -401,16 +475,6 @@ The hit rate distribution \ref{fig:hitrate_10_test} of different groups for the 
     \caption{Hit rate@top 10 per epoch for the testing data set}
     \label{fig:hitrate_10_test}
 \end{figure}
-
-% \subsection{AUC}
-% From the figure \ref{fig:auc}, the AUC score stays stable at around 0.7.
-
-% \begin{figure}[H]
-%     \centering
-%     \includegraphics[scale=0.9]{auc.png}
-%     \caption{The AUC metric}
-%     \label{fig:auc}
-% \end{figure}
 
 \section{Metrics for the TF-IDF approach}
 \subsection{hit rate}
