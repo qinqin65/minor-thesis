@@ -7,6 +7,16 @@
 \usepackage{float}
 \usepackage{capt-of}
 \usepackage{amsmath}
+\usepackage{xcolor}
+\usepackage[linesnumbered,ruled]{algorithm2e}
+\usepackage{multirow}
+
+%%% Coloring the pseudocode comment as blue
+\newcommand\mycommfont[1]{\footnotesize\ttfamily\textcolor{blue}{#1}}
+\SetCommentSty{mycommfont}
+
+\SetKwInput{KwInput}{Input}
+\SetKwInput{KwOutput}{Output}
 
 % Place the correct values here
 %Set to the original submission date when submitted amended thesis
@@ -122,14 +132,13 @@ This thesis presented a knowledge graph neural network based model to recommend 
 \textit{There is various side information that can be used to build the KGNN based GitHub repositories recommender system.} Users’ behaviours such as "star", "pull" and "clone" can be regarded as side information that indicates users are interested in some repositories. Repositories' programming language can also be considered as side information that guides the recommender system to recommend the repository to the user with the same programming language preference. Those side information can help the KGNN model to achieve the expected outcome.
 
 \section{Research questions}
-This research aims to propose a recommender system for GitHub repositories with high performance and the ability to solve data sparsity and cold start issues.
+This research aims to propose a KGNN based recommender system for GitHub repositories with high performance and the ability to solve data sparsity and cold start issues by using side information.
 
-Based on this aim, there are three research questions as list below.
+Based on this aim, we came up with the below research questions.
 
 \begin{enumerate}
-    \item RQ1: What side information can be used to build a KGNN based repositories recommender system?
-    \item RQ2: What’s the performance can the KGNN based repositories recommender system achieve?
-    \item RQ3: How better can the KGNN based repositories recommender system mitigate the data sparsity issue?
+    \item RQ1: What’s the performance can the KGNN based repositories recommender system achieve?
+    \item RQ2: How better can the KGNN based repositories recommender system mitigate the data sparsity and cold start issues?
 \end{enumerate}
 
 \chapter{Literature review}
@@ -352,7 +361,7 @@ To make the neural network learn to output the expected representations, we used
 
 The $m$ means the number of types of edges (in this case it is 4). The $e$ means the number of edges. The $f$ means the cosine similarity. The $n_u$ and $n_v$ means the source and destination nodes for the negative edge $j$. The $p_u$ and $p_v$ means the source and destination nodes for the positive edge $j$. The $\Delta$ is the correction parameter that prevents the loss from becoming zero.
 
-\subsection{Evaluation metric}
+\subsection{Evaluation metrics for training}
 We use AUC score to evaluate the training process. The AUC score is calculated as the area under the ROC curve. It has the range of 0 to 1. The higher the score means the better the performance.
 
 \subsection{Training results}
@@ -408,7 +417,7 @@ The data was collected from GitHub Archive \footnote{https://www.githubarchive.o
 \section{Data exploration}
 The collected data set contains 4417 users and 7054 repositories. There are 42316 interactions (such as star, watch and fork) between users and repositories. The scale of the data set is small due to the quota limitations of the developer API provided by GitHub but enough for the experiment.
 
-From the figure \ref{fig:user_repo_dist_hist} and \ref{fig:user_repo_dist_bar}, we can see that most repositories interact with less than 5 users while few of them interact with at most 50 users. It means that the data collected is very sparse. If construct a rating matrix of users and repositories then there will be too many zeros (regard a fork or star behaviour as a rating).
+From the figure \ref{fig:user_repo_dist_hist} and \ref{fig:user_repo_dist_bar}, we can see that most repositories interact with less than 5 users while few of them interact with at most 50 users. It means that the data collected is very sparse. The rating matrix of users and repositories has too many zeros (regard a fork or star behaviour as a rating). The sparsity is 0.062\% for this data set.
 
 \begin{figure}[H]
     \centering
@@ -428,116 +437,313 @@ From the figure \ref{fig:user_repo_dist_hist} and \ref{fig:user_repo_dist_bar}, 
 \subsection{TF-IDF approach}
 A TF-IDF approach proposed by \cite{sun_personalized_2018} was used as a baseline model for the evaluation of the KGNN based model. TF-IDF means term frequency and inverse document frequency which calculates the ratio between the frequency of the appearance of a term and the frequency of documents that contains the term. It can be used to measure the similarity between documents. The tf-idf vectors of documents with a similar topic tend to be similar.
 
-This TF-IDF approach calculates the TF-IDF vectors for readme files and source code for all repositories. Then the 2 similarity matrices between repositories are carried out (one for the readme files and another one for the source code). The final similarity score between repositories is calculated by combining the 2 matrices using the equation \ref{eq:sim_repositories}. After the calculation of the similarity matrix, the algorithm recommends the most similar repositories to users.
+This TF-IDF approach calculates the TF-IDF vectors for readme files and source code for all repositories. Based on those TF-IDF vectors, the 2 similarity matrices between repositories can be constructed (one for the readme files and another one for the source code). The final similarity score between repositories is calculated by combining the 2 matrices using the equation \ref{eq:sim_repositories}. After the calculation of the similarity matrix, the algorithm recommends the most similar repositories to users.
 
 \begin{gather}
-    SIM(a,b)=\alpha\cdot{SIM_readme(a,b)}+\beta\cdot{SIM_src(a,b)}, \\
+    SIM(a,b)=\alpha\cdot{SIM_{readme}(a,b)}+\beta\cdot{SIM_{src}(a,b)}, \\
     s.t.\quad\alpha+\beta=1.
     \label{eq:sim_repositories}
 \end{gather}
 
+The $\alpha$ and $\beta$ are hyper parameters meant to control the weight of the 2 types of similarities. They are tuned to 0.9 and 0.1 respectively in this experiment.
+
 \subsection{Collaborate filtering approach}
 A collaborative approach \cite{guendouz_recommending_2015} was also used as a baseline model for the evaluation of the KGNN based model. This approach measures the similarities between users and recommends the most "co-rated" repositories from the most similar users. The similarity measurement is the number of interactions (such as the number of stars).
+
+\begin{algorithm}[H]
+    \DontPrintSemicolon
+    
+    \tcc{The u and v are two GitHub users}
+    \KwInput{u, v}
+    \tcc{The score is measured by the number of common repositories}
+    \KwOutput{The similarity score between u and v}
+
+    $count \leftarrow 0$ \newline
+    \tcc{$R_u$ is the list of repositories of the user u}
+    \ForEach{$r$ in $R_u$}
+    {
+        \tcc{$R_v$ is the list of repositories of the user v}
+        \If{$r$ in $R_v$}
+        {
+            $count \leftarrow count + 1$
+        }
+    }
+    \Return $count$
+    
+    \caption{similar}
+    \label{alg:similar}
+\end{algorithm}
+
+The algorithm \ref{alg:similar} shows the pseudocode of measuring the similarity between users. The algorithem \ref{alg:ratings} shows the pseudocode of calculating the most rated common repositories between similar users. The top k most rated common repositories from the most similar users will be recommended.
+
+\begin{algorithm}[H]
+    \DontPrintSemicolon
+    
+    \tcc{The r is a GitHub repository}
+    \KwInput{r}
+    \tcc{The rating is measured as the number of interactions between users and repositories}
+    \KwOutput{The number of ratings of the repository r}
+
+    $ratings \leftarrow 0$ \newline
+    \tcc{The $Users$ is the highly similar users}
+    \ForEach{$user$ in $Users$}
+    {
+        \tcc{The $R_{user}$ is the list of repositories of the user}
+        \If{$r$ in $R_{user}$}
+        {
+            $ratings \leftarrow ratings + 1$
+        }
+    }
+    \Return $ratings$
+    
+    \caption{number\_of\_ratings}
+    \label{alg:ratings}
+\end{algorithm}
 
 % \subsection{Neural network based ranking model}
 
 \subsection{Random recommendation}
-Since traditional recommender systems suffer from data sparsity. They may end up in a poor performance during evaluation. To determine whether they work or not, this thesis used a random recommender as a contrast model. The poor performance models should be at least better than a random recommender model.
+Since traditional recommender systems suffer from data sparsity and cold start issues. They may end up in a poor performance during the evaluation. To determine whether they work or not, we used a random recommender as the contrast model. The poor performance models should be at least better than a random recommender model.
 
-\section{Metrics for the KGNN model}
+\section{Evaluation metrics for comparison}
 \subsection{Hit rate}
-According to the figure \ref{fig:hitrate_10}, the best overall hit rate for the top 10 is around 0.75 when the training epoch is 45. The epochs beyond 45 indicate that the neural network will be over-trained.
+The hit rate measures the ratio between hitted repositories and all the repositories recommended. If a recommended repository is on the list of users' repositories, then it means a hit. The higher the ratio means the more accurate the recommendation. It does not consider the ranking order of the relevance of recommended repositories. The equation \ref{eq:hit_rate} shows how this metric is calculated.
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[scale=0.9]{hitrate@10.png}
-    \caption{Hit rate@top 10 per epoch}
-    \label{fig:hitrate_10}
-\end{figure}
+\begin{equation}
+    HitRate=\frac{R_{hit}}{R_{hit}+R_{missed}}
+    \label{eq:hit_rate}
+\end{equation}
 
-\subsection{Hit rate in different groups}
-The users were split into 4 groups. The users in "group 0 to 5" have under 5 records of repository interactions(includes the star, watch, fork and own). Similarly, The users in "group 15 and above" have above 15 records of repositories.
+\subsection{Mean Reciprocal Rank}
+While hit rate does not evaluate the ranking order of recommendations, Mean Reciprocal Rank (MRR) evaluates the accuracy of the ranking order of the most relevant recommendation. The equation \ref{eq:mrr} shows how it is calculated. The $Q$ means the total number of querys (each query can be seen as the recommendations for a specific user). The $rank_i$ means the rank of the most relevant recommendation.
 
-According to the figure \ref{fig:hitrate_10_valid}, the hit rate for "group 15 and above" can reach 0.85 in the validation data set. The hit rate for "group 0 to 5" is stable and around 0.77. The hit rate for the middle tier (group 5 to 10 and 10 to 15) is quite poor compared with other tiers. The reason may be the number of records of the middle tier is small than that of the "group 0 to 5" which takes up about 80\% of the records. The reason why the "group 15 and above" has a high hit rate may be that the number of records of repositories is large and relatively easy to get hit.
+\begin{equation}
+    MRR=\frac{1}{Q}\sum_{i=1}^Q\frac{1}{rank_i}
+    \label{eq:mrr}
+\end{equation}
 
-The hit rate distribution \ref{fig:hitrate_10_test} of different groups for the testing data set is similar to that of the validation data set.
+\subsection{Normalized Discounted Cumulative Gain}
+Normalized Discounted Cumulative Gain (NDCG) evaluates the quality of the rank of the recommendations. Unlike MRR only evaluates one single item rank of a recommendation, NDCG evaluates the ranks of all the items of a recommendation. The Discounted Cumulative Gain(DCG) and Ideal Discounted Cumulative Gain(IDCG) need to be calculated, then normalized to produce the NDCG score. 
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[scale=0.9]{hitrate@10_valid.png}
-    \caption{Hit rate@top 10 per epoch for the validation data set}
-    \label{fig:hitrate_10_valid}
-\end{figure}
+DCG is calculated by summing all the relevance socre, which is discounted by a log function of its position, of the recommendations. In this experiment, the relevance score is defined in the table \ref{tab:relevance_score}. If a recommended repository is in the user's watch list, then it gets a relevance score of 1. The equation \ref{eq:dcg} shows how the DCG is calculated. The $k$ means the number of recommended repositories.
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[scale=0.9]{hitrate@10_test.png}
-    \caption{Hit rate@top 10 per epoch for the testing data set}
-    \label{fig:hitrate_10_test}
-\end{figure}
+IDCG is the best DCG the recommender system can achive (like an upper bound). In IDCG, the highest relevance score will rank before the lowest ones. Since the relevance score is discounted by their position, so the descending order of the relevance score will achieve the best DCG.
 
-\section{Metrics for the TF-IDF approach}
-\subsection{hit rate}
-From the table \ref{tab:hitrate_10_tf-idf}, we can see that the performance is poor compared with the KGNN model.
+The NDCG is the normalized DCG. The equation \ref{eq:ndcg} shows how it is calculated.
 
 \begin{center}
-    \captionof{table}{Hit rate@top 10 for the TF-IDF approach}
-    \begin{tabular}{l | l | l | l | l | l}
+    \captionof{table}{The definition of the relevance score}
+    \begin{tabular}{l | l}
     \hline
-    Top k & Overall & Group 0 to 5 & Group 5 to 10 & Group 10 to 15 & Group 15 to 20 \\
+    Relation & Relevance score \\
     \hline
-    10 & 0.042 & 0.039 & 0.040 & 0.073 & 0.106 \\
+    watch & 1 \\
+    star & 2 \\
+    fork & 3 \\
+    own & 4
     \end{tabular}
-    \label{tab:hitrate_10_tf-idf}
+    \label{tab:relevance_score}
 \end{center}
 
-\section{Metrics for the collaborative filtering approach}
-\subsection{hit rate}
-From the table \ref{tab:hitrate_10_cf}, we can see that the performance is also poor compared with the KGNN model.
+\begin{equation}
+    DCG=\sum_{i=1}^k\frac{relevance\_score_i}{log_2(i+1)}
+    \label{eq:dcg}
+\end{equation}
+
+\begin{equation}
+    NDCG=\frac{DCG}{IDCG}
+    \label{eq:ndcg}
+\end{equation}
+
+\section{Results}
+Since the data set is imbalanced (most users have fewer repositories while few users have more than 20 repositories), we splitted the results into 4 groups based on the number of repositories to study the performance in different groups. The groups is shown in the table \ref{tab:4_groups}. "Group 0 to 5" means that the users in this group have 0 to 5 (not include 5) repositories. If the repositories of the users are less than the designated top $k$, then the recommender will recommend the same amount of repositories of the users.
 
 \begin{center}
-    \captionof{table}{Hit rate@top 10 for the collaborative filtering approach}
-    \begin{tabular}{l | l | l | l | l | l}
+    \captionof{table}{4 groups}
+    \begin{tabular}{l | l}
     \hline
-    Top k & Overall & Group 0 to 5 & Group 5 to 10 & Group 10 to 15 & Group 15 to 20 \\
+    No. & Group \\
     \hline
-    10 & 0.063 & 0.066 & 0.060 & 0.023 & 0.021 \\
-    15 & 0.073 & 0.077 & 0.077 & 0.019 & 0.016 \\
-    20 & 0.085 & 0.089 & 0.095 & 0.019 & 0.013 \\
+    1 & 0 to 5 \\
+    2 & 5 to 10 \\
+    3 & 10 to 15 \\
+    4 & 15 and over
     \end{tabular}
-    \label{tab:hitrate_10_cf}
+    \label{tab:4_groups}
 \end{center}
 
-\section{Metrics for the random recommendation model}
-From the table \ref{tab:hitrate_10_rand}, we can see that the performance of the random recommender is the poorest.
+To investigate whether the KGNN model can solve the cold start issue, we examed the recommendation performance in users who have only 1 repositories. The KGNN model can recommend repositories to users who have no repositories in the training data set once it learns the representation of the users and repositories.
+
+\subsection{Overall performance}
+The table \ref{tab:overall_performance} shows the overall performance for top 10, top 15 and top 20 recommendations. The performance of the KGNN model surpassed the baseline models significantly in all the metrics.
+
+The difference in the performance is huge between the KGNN model and the baseline models. The reason is that the other models suffer from data sparsity. The TF-IDF and CF model are based on traditional approaches that are susceptible to data sparsity. Their performance surpassed the random model significantly which means the 2 models worked but cannot work well when the data is sparse.
 
 \begin{center}
-    \captionof{table}{Hit rate@top 10 for the random recommender model}
+    \captionof{table}{Overall performance}
+    \begin{tabular}{l | l | l | l | l}
+    \hline
+    Top K & Model & Hit Rate & MRR & nDCG \\
+    \hline
+    \multirow{4}{*}{10} 
+    & KGNN & \textbf{0.73} & \textbf{0.3} & \textbf{0.75} \\
+    & TF-IDF & 0.037 & 0.025 & 0.021 \\
+    & CF & 0.056 & 0.01 & 0.005 \\
+    & Random & 0.002 & 0.001 & 0.000 \\
+    \hline
+    \multirow{4}{*}{15}
+    & KGNN & \textbf{0.73} & \textbf{0.3} & \textbf{0.74} \\
+    & TF-IDF & 0.043 & 0.025 & 0.021 \\
+    & CF & 0.067 & 0.01 & 0.005 \\
+    & Random & 0.002 & 0.001 & 0.000 \\
+    \hline
+    \multirow{4}{*}{20}
+    & KGNN & \textbf{0.75} & \textbf{0.3} & \textbf{0.76} \\
+    & TF-IDF & 0.046 & 0.025 & 0.021 \\
+    & CF & 0.075 & 0.01 & 0.004 \\
+    & Random & 0.004 & 0.001 & 0.001 \\
+    \end{tabular}
+    \label{tab:overall_performance}
+\end{center}
+
+\subsection{Hit rate group performance}
+According to the table \ref{tab:hit_rate_group_performance}, the hit rate for the KGNN in "group 15 and above" can reach as high as 0.85 when the top $k$ is 20. The hit rate for "group 0 to 5" is stable and around 0.75. The hit rate for the middle tier (group 5 to 10 and 10 to 15) is quite poor compared with other tiers. The reason is that the number of records of the middle tier is small than that of the "group 0 to 5" which takes up about 80\% of the records. The reason why the "group 15 and above" has a high hit rate may be that the number of records of repositories is large and relatively easy to get hit.
+
+The pattern of performance of the 4 groups of the baseline models is similar to that of the KGNN model. The performance of the KGNN model surpassed other models across the 4 groups.
+
+\begin{center}
+    \captionof{table}{Hit rate group performance}
     \begin{tabular}{l | l | l | l | l | l}
     \hline
-    Top k & Overall & Group 0 to 5 & Group 5 to 10 & Group 10 to 15 & Group 15 to 20 \\
+    Top K & Model & 0 to 5 & 5 to 10 & 10 to 15 & 15 and over \\
     \hline
-    10 & 0.001 & 0.001 & 0.000 & 0.000 & 0.007 \\
-    15 & 0.002 & 0.002 & 0.000 & 0.002 & 0.006 \\
-    20 & 0.004 & 0.004 & 0.006 & 0.003 & 0.006 \\
+    \multirow{4}{*}{10} 
+    & KGNN & \textbf{0.76} & \textbf{0.59} & \textbf{0.69} & \textbf{0.82} \\
+    & TF-IDF & 0.034 & 0.04 & 0.067 & 0.103 \\
+    & CF & 0.058 & 0.079 & 0.013 & 0.017 \\
+    & Random & 0.002 & 0.000 & 0.003 & 0.004 \\
+    \hline
+    \multirow{4}{*}{15}
+    & KGNN & \textbf{0.75} & \textbf{0.53} & \textbf{0.44} & \textbf{0.42} \\
+    & TF-IDF & 0.04 & 0.054 & 0.072 & 0.08 \\
+    & CF & 0.069 & 0.091 & 0.017 & 0.015 \\
+    & Random & 0.001 & 0.000 & 0.002 & 0.006 \\
+    \hline
+    \multirow{4}{*}{20}
+    & KGNN & \textbf{0.75} & \textbf{0.57} & \textbf{0.68} & \textbf{0.85} \\
+    & TF-IDF & 0.044 & 0.054 & 0.083 & 0.068 \\
+    & CF & 0.078 & 0.116 & 0.02 & 0.015 \\
+    & Random & 0.004 & 0.006 & 0.000 & 0.004 \\
     \end{tabular}
-    \label{tab:hitrate_10_rand}
+    \label{tab:hit_rate_group_performance}
 \end{center}
+
+\subsection{MRR rate group performance}
+Based on the table \ref{tab:mrr_group_performance}, the MRR of the group "5 to 10" is the highest for all models and top $k$s. However, the sample size in this group is not large. The reason why this group has the highest MRR is unknown. The MRR of the KGNN model surpassed the baseline models. It means that the KGNN model is more accurate in ranking the most relevant repository to the right position.
+
+\begin{center}
+    \captionof{table}{MRR group performance}
+    \begin{tabular}{l | l | l | l | l | l}
+    \hline
+    Top K & Model & 0 to 5 & 5 to 10 & 10 to 15 & 15 and over \\
+    \hline
+    \multirow{4}{*}{10} 
+    & KGNN & \textbf{0.28} & \textbf{0.55} & \textbf{0.39} & \textbf{0.33} \\
+    & TF-IDF & 0.016 & 0.153 & 0.208 & 0.21 \\
+    & CF & 0.01 & 0.067 & 0.022 & 0.022 \\
+    & Random & 0.000 & 0.000 & 0.007 & 0.023 \\
+    \hline
+    \multirow{4}{*}{15}
+    & KGNN & \textbf{0.29} & \textbf{0.57} & \textbf{0.41} & \textbf{0.42} \\
+    & TF-IDF & 0.017 & 0.159 & 0.209 & 0.204 \\
+    & CF & 0.009 & 0.038 & 0.017 & 0.032 \\
+    & Random & 0.000 & 0.000 & 0.004 & 0.040 \\
+    \hline
+    \multirow{4}{*}{20}
+    & KGNN & \textbf{0.28} & \textbf{0.55} & \textbf{0.39} & \textbf{0.34} \\
+    & TF-IDF & 0.017 & 0.159 & 0.208 & 0.2 \\
+    & CF & 0.009 & 0.085 & 0.029 & 0.032 \\
+    & Random & 0.001 & 0.012 & 0.000 & 0.011 \\
+    \end{tabular}
+    \label{tab:mrr_group_performance}
+\end{center}
+
+\subsection{NDCG rate group performance}
+According to the table \ref{tab:ndcg_group_performance}, the group "15 and over" has the highest NDCG for all models and top $k$s. The NDCG of baseline models do not change too much across different top $k$s. The NDCG of the KGNN model surpassed baseline models significantly. It means that the KGNN model is more accurate in ranking each repositories in a recommendation to the right position.
+
+\begin{center}
+    \captionof{table}{NDCG group performance}
+    \begin{tabular}{l | l | l | l | l | l}
+    \hline
+    Top K & Model & 0 to 5 & 5 to 10 & 10 to 15 & 15 and over \\
+    \hline
+    \multirow{4}{*}{10} 
+    & KGNN & \textbf{0.75} & \textbf{0.68} & \textbf{0.77} & \textbf{0.85} \\
+    & TF-IDF & 0.016 & 0.048 & 0.069 & 0.110 \\
+    & CF & 0.004 & 0.031 & 0.012 & 0.013 \\
+    & Random & 0.000 & 0.000 & 0.003 & 0.006 \\
+    \hline
+    \multirow{4}{*}{15}
+    & KGNN & \textbf{0.75} & \textbf{0.64} & \textbf{0.53} & \textbf{0.56} \\
+    & TF-IDF & 0.016 & 0.048 & 0.068 & 0.109 \\
+    & CF & 0.004 & 0.018 & 0.011 & 0.015 \\
+    & Random & 0.000 & 0.000 & 0.001 & 0.008 \\
+    \hline
+    \multirow{4}{*}{20}
+    & KGNN & \textbf{0.75} & \textbf{0.65} & \textbf{0.75} & \textbf{0.88} \\
+    & TF-IDF & 0.016 & 0.048 & 0.068 & 0.111 \\
+    & CF & 0.003 & 0.036 & 0.01 & 0.013 \\
+    & Random & 0.000 & 0.006 & 0.000 & 0.004 \\
+    \end{tabular}
+    \label{tab:ndcg_group_performance}
+\end{center}
+
+\subsection{Performance of solving the cold start issue}
+To test whether the KGNN model can solve the cold start issue, we had a look at the performance of the recommendation in users who have only 1 repository in the test data set. Since there is only 1 repository, so the results of MRR and NDCG metric are the same as the hit rate metric. We only list the performance of the hit rate in the table \ref{tab:top_1_recommendation}.
+
+\begin{center}
+    \captionof{table}{Top 1 recommendation}
+    \begin{tabular}{l | l | l | l | l | l}
+    \hline
+    Top K & Model & Hit rate \\
+    \hline
+    1 & KGNN & \textbf{0.209} \\
+    1 & TF-IDF & 0.011 \\
+    1 & CF & 0.018 \\
+    1 & Random & 0.002 \\
+    \end{tabular}
+    \label{tab:top_1_recommendation}
+\end{center}
+
+The performance of the KGNN model of solving cold start issue is not promising as solving the data sparsity issue. However, its performance is still significantly better than that of baseline models.
 
 \section{Discussion}
-The performance of the KGNN model is the highest while other models have an extremely poor performance. The TF-IDF and collaborative filtering model are at least 10 times more accurate than the random recommender. It means that the TF-IDF and collaborative filtering model work but suffer from data sparsity. Based on this result, the KGNN model is promising in solving the data sparsity issues.
+According to the results of the 3 metrics, the KGNN model has the highest performance while other models have an extremely poor performance. The random recommendation model has the poorest performance due to the highly sparse data set.
+
+In the hit rate metric, the performance of the KGNN model is far better than the baseline models. This is because the baseline models suffer from data sparsity while the KGNN model can learn some hidden relationships between users and repositories from side information to fight against the data sparsity issue.
+
+In the MRR metric, the performance of the TF-IDF model is close to the that of the KGNN model when the group is "5 to 10", "10 to 15" and "15 and over". The performance of the CF model is around 10 times poorer than that of the KGNN and TF-IDF model due to the data sparsity issue.
+
+The MRR performance in the group "0 to 5" is the poorest for all the 4 models. The reason may be that the number of repositories for it to calculate the hidden relationship is scarce in the group of "0 to 5" since it has at most 5 repositories. The random recommendation model has a near 0 performance in the group "0 to 5" and "5 to 10". It is understandable because the probability for it to hit is low in this data set.
+
+This means the KGNN model is better than the baseline models in ranking the most relevant repositories. The TF-IDF model is also promising when the number of repositories per user is greater than 5.
+
+In the NDCG metric, the performance of the KGNN model is far better than the baseline models. It means that the KGNN model recommends repositories with the relevance ranked in the right position with a high accuracy. The TF-IDF model is the second best model to recommend repositories ranked in the right position.
+
+According to the performance of solving the cold start issues, the KGNN model are better than the baseline models. When it comes to the cold start issues, the TF-IDF and CF models cannot find similar users or repositories for the new users and thus have a poor performance. While the KGNN model can use side information to improve the performance. Based on the table \ref{tab:top_1_recommendation}, the performance was not improved too much but it demonstrated that the KGNN model has the ability to solve the cold start issue.
 
 \subsection{RQ1}
-Based on the experiment. The currently selected features include names, source code and readme files and so on. Some features have no impact on the performance such as "has\_wiki" and "has\_pages". Some features do play an important role in improving performance. Such as readme files and source code. If they are removed, the performance can drop significantly.
+Based on the experiment result for all top $k$s, the hit rate of the KGNN model can reach around 0.7. The MRR score can reach around 0.3. The NDCG score and reach around 0.7. The performance is the best among the baseline models.
 
 \subsection{RQ2}
-The best overall performance for the KGNN model is 75\% hit rate@top 10 when the epoch is around 55.
-
-\subsection{RQ3}
-Compared with the baseline models. The performance is around 10 times better than that of baseline models in such a data set with high data sparsity.
+Based on the experiment result, the KGNN model can solve the data sparsity issue which means it can recommend repositories with a reasonable accuracy in the data set with a high sparsity. It can also mitigate the cold start issue compared with the baseline models. According to the result \ref{tab:top_1_recommendation}, the KGNN model can recommend repositories with an accuracy of 0.2 to new users who have no similar users or repositories in the data set.
 
 \chapter{Conclusion}
-Based on the results, the KGNN model can reduce the impact of data sparsity issues significantly. However, the performance is still not the best. Especially for the group 5 to 10 and 10 to 15 since they have fewer samples. Future work will explore the relationship between users (such as the following behaviour) to further improve the performance of the KGNN model in reducing the impact of data sparsity issues. The random walk and sampling techniques will also be integrated to enable the model to run on a larger scale.
+We proposed a KGNN based recommender system for GitHub to solve the data sparsity and cold start issues. The KG was firstly constructed from users, repositories and their side information. The KG was then inputted into the neural network to learn the representation of users and repositories. The learned representations are vectors. The loss function and training process made those vectors close in the representation space if there is a link between the users and repositories in the KG. Otherwise the vectors will be far away. We used cosine distance to measure the distance between those representations and recommend the closest repositories to users.
+
+We found that the performance for all the metrics of the KGNN model is far better than baseline models in a highly sparse data set. The experiment result shows that the impact of data sparsity issue can be reduced significantly by using side information through the KGNN model. However, the performance can still be improved. There are other side information that can be included such as the social relationships between users. The cold start issue can also be mitigated. The hit rate is 0.2 for the cold start group (the group of users who have only 1 repository). It is not as good as that of other groups but still acceptable. Since there is no similar users or repositories for a model to learn hidden relationships. The only information can be used is side information.
+
+Future work will explore the relationship between users (such as the following behaviour) to further improve the performance of the KGNN model in reducing the impact of data sparsity and cold start issues. The random walk and sampling techniques will also be integrated to enable the model to run on a larger scale.
 
 % \appendix
 % \chapter{Testbed Configuration}
