@@ -117,11 +117,11 @@ The recommender system for GitHub repositories is important. Developers tend to 
 
 \textit{Most recommender systems have data sparsity and cold start issues.} Due to the long tail effect, few popular items have the most ratings while lots of others have fewer ratings. As a result, the constructed user-item matrix is sparse. It is inefficient for a model to deal with a sparse matrix. If a user does not rate any items, then it is hard for the recommender system to recommend items to that user. This is the cold start issue. Because in the beginning, there are always few ratings. Researchers have proposed various approaches to tackle these issues.
 
-One of the approaches is to take the side information \cite{jonschkowski_patterns_2016}. Side information is the data that is outside of the input and output data set of a machine learning system and can provide some clues to the machine learning system. For a repository recommender system, the relationships between users and repositories can be used as the side information.
+One of the approaches is to take the side information \cite{jonschkowski_patterns_2016}. Side information is the data that is outside of the input and output data set of a machine learning system and can provide some clues to the machine learning system. For a repository recommender system, the relationships between users and repositories can be used as side information.
 
 Side information can be efficiently integrated into a knowledge graph neural network (KGNN). KGNN is a neural network that takes inputs of a knowledge graph (KG). The neural network can learn the relationships between nodes through the connections in a KG.
 
-With more information that can be used, a recommender system is able to fight against the data sparsity and cold start issues. The improvements are promising according to \cite{zhang_knowledge_2020} which applied side information and knowledge graph neural network to mobile APP recommendations.
+With more information that can be used, a recommender system can fight against data sparsity and cold start issues. The improvements are promising according to \cite{zhang_knowledge_2020} which applied side information and knowledge graph neural network to mobile APP recommendations.
 
 Many existing works have proposed various GitHub recommender systems. \textit{But none of them can deal with the cold start problem because they ignored the use of the side information for the recommender system.}
 
@@ -183,14 +183,13 @@ While numerous studies show that the advantage of KGNN and the use of side infor
 % \section{Side information}
 
 \section{Recommender systems for GitHub repositories}
-The memory based CF model is a mostly used approach in recommending Github repositories. It calculates the similarity between developers and the similarity between repositories. Various preferences such as expertise, technique stacks and behaviours (i.e., star, folk and create) are used to measure the similarity between developers. Repositories' documents such as the readme file and source code are used to measure the similarity between repositories. Some research also take programming languages into consideration \cite{inka_open_2018, sun_personalized_2018}. Most papers determine similarities between repositories by calculating TF-IDF vector space and then calculate cosine distance or Pearson correlation coefficient \cite{mansur_review_nodate, kim_sequential_2021}. After calculating similarities, it defines the ratings for each developer and repository pair. Most papers define the rating by encoding user behaviours into a score coding such as 2 for “star”, 5 for “folk” and 10 for “create” with the higher score stands for the higher weight. Then, it uses various collaborative filtering techniques to recommend repositories.
+The memory based CF model is a mostly used approach in recommending Github repositories. It calculates the similarity between developers and the similarity between repositories. Various preferences such as expertise, technique stacks and behaviours (i.e., star, folk and create) are used to measure the similarity between developers. Repositories' documents such as the readme file and source code are used to measure the similarity between repositories. Some research also take programming languages into consideration \cite{inka_open_2018, sun_personalized_2018}. Most papers determine similarities between repositories by calculating TF-IDF vector space and then calculate cosine distance or Pearson correlation coefficient \cite{mansur_review_nodate, kim_sequential_2021}. After calculating similarities, it defines the ratings for each developer and repository pair. Most papers define the rating by encoding user behaviours into a score coding such as 2 for “star”, 5 for “folk” and 10 for “create” with the higher score standing for the higher weight. Then, it uses various collaborative filtering techniques to recommend repositories.
 
 The second most used approach is a model based such as Bayesian personalized ranking matrix factorization (BPRMF) \cite{jiang_open_2017} and Constrained GCN model \cite{shao_paper2repo_2020}. In this kind of approach, users’ behaviour (star, folk and create) and repositories’ documents (readme file and source code) are encoded and represented as a matrix factorization \cite{jiang_open_2017}. Then the task is to search for the best matrix factors to minimize the recommendation error. The sequential recommendation, which includes approaches like gated recurrent units for recommendation (GRU4Rec) and DNN based Caser and SASRec methods \cite{kim_sequential_2021}, are also promising. Kim et al. \cite{kim_sequential_2021} tested and compared those approaches in their work \cite{kim_sequential_2021}.
 
-An approach proposed by \cite{zhang_detecting_2017} are based on some assumptions. For example, if a user stars a repository then the user is interested in that kind of repository. Some assumptions may not be reasonable. For example, if the time gap of two repositories starred by an user is short, then the two repositories are similar. A developer usually stars many non-similar repositories in a short time because they are both important for his or her project. The paper still claims a sound performance according to \cite{zhang_detecting_2017}. \cite{xu_repersp_2017, sun_personalized_2018, zhang_detecting_2017} only tested limited categories of repositories. For example, Vim-jp, Formidable and Harvest-hq. \cite{sun_personalized_2018} only test Java related repository because it relies on the Java API usage pattern to detect similarities \cite{zhang_detecting_2017}. The performance of those models in real situations may not be as good as the papers presented.
+An approach proposed by \cite{zhang_detecting_2017} are based on some assumptions. For example, if a user stars a repository then the user is interested in that kind of repository. Some assumptions may not be reasonable. For example, if the time gap of two repositories starred by a user is short, then the two repositories are similar. A developer usually stars many non-similar repositories in a short time because they are both important for his or her project. The paper still claims a sound performance according to \cite{zhang_detecting_2017}. \cite{xu_repersp_2017, sun_personalized_2018, zhang_detecting_2017} only tested limited categories of repositories. For example, Vim-jp, Formidable and Harvest-hq. \cite{sun_personalized_2018} only test Java related repository because it relies on the Java API usage pattern to detect similarities \cite{zhang_detecting_2017}. The performance of those models in real situations may not be as good as the papers presented.
 
-Above all, these studies used limited information and data set to build and evaluate their models. It is because the traditional approaches have limitations in using side information. According to the table \ref{tab:literature_review_matrix}, \cite{zhang_detecting_2017,inka_open_2018,xu_repersp_2017,sun_personalized_2018} used a TF-IDF based collaborate filtering approach to recommend repositories. \cite{guendouz_recommending_2015} used a clustering approach to recommend repositories. Those 2 approaches are limited in using side information and prone to suffer from data sparsity. \cite{liu_recommending_2018} used a neural network approach that can use side information such as "last commit time". However, the structure of the neural network, which takes all the repositories to be recommended as inputs, makes it difficult to work in real situations. \cite{shao_paper2repo_2020} used a graph convolutional network (GCN) approach and used the side information tag of repositories to solve data sparsity and cold start issues. However, it only 
-used limited side information and the recommendation is for papers not users. \textit{Our approach will be focused on recommending repositories to users and incorporating side information into a KGNN to solve data sparsity and cold start issues.}
+Above all, these studies used limited information and data set to build and evaluate their models. It is because the traditional approaches have limitations in using side information. According to the table \ref{tab:literature_review_matrix}, \cite{zhang_detecting_2017,inka_open_2018,xu_repersp_2017,sun_personalized_2018} used a TF-IDF based collaborate filtering approach to recommend repositories. \cite{guendouz_recommending_2015} used a clustering approach to recommend repositories. Those 2 approaches are limited in using side information and prone to suffer from data sparsity. \cite{liu_recommending_2018} used a neural network approach that can use side information such as "last commit time". However, the structure of the neural network, which takes all the repositories to be recommended as inputs, makes it difficult to work in real situations. \cite{shao_paper2repo_2020} used a graph convolutional network (GCN) approach and used the side information tag of repositories to solve data sparsity and cold start issues. However, it only used limited side information and the recommendation is for papers, not users. \textit{Our approach will be focused on recommending repositories to users and incorporating side information into a KGNN to solve data sparsity and cold start issues.}
 
 \begin{center}
     \captionof{table}{Literatures of GitHub recommendation}
@@ -209,13 +208,13 @@ used limited side information and the recommendation is for papers not users. \t
     \hline
     \cite{xu_repersp_2017} & Github repositories recommendation for users & Represent the user's behaviour in the form a user-repository matrix, then calculate the similarity (TF-IDF and cosine distance) of repositories by considering their documents and source code, then generate and recommend the top K similar repositories. & Users and repositories & Recommended repositories for each user & N/A & N/A \\
     \hline
-    \cite{sun_personalized_2018} & Github repositories recommendation for users & Represent the users' behaviour in the form of a matrix UP(user, repository), then calculate the similarity between repositories using documents and source code (calcaulate TF-IDF vectors), then epresent the similarity of repositories as a form of similarity matrix, then the most similar repositories & Users and repositories & Recommended repositories for each user & N/A & N/A \\
+    \cite{sun_personalized_2018} & Github repositories recommendation for users & Represent the users' behaviour in the form of a matrix UP(user, repository), then calculate the similarity between repositories using documents and source code (calculated TF-IDF vectors), then represent the similarity of repositories as a form of the similarity matrix, then the most similar repositories & Users and repositories & Recommended repositories for each user & N/A & N/A \\
     \hline
-    \cite{portugal_gh4re_nodate} & Github repositories recommendation for users & Use a NLP tool set to get the corpuses of repositories, then apply a K-means clustering algorithem to the corpuses, then recommended repositories from the same cluster of users & Repositories & Repositories from the same cluster & N/A & N/A \\
+    \cite{portugal_gh4re_nodate} & Github repositories recommendation for users & Use an NLP toolset to get the corpora of repositories, then apply a K-means clustering algorithm to the corpora, then recommended repositories from the same cluster of users & Repositories & Repositories from the same cluster & N/A & N/A \\
     \hline
     \cite{guendouz_recommending_2015} & Github repositories recommendation for users & Firstly find the highly similar users, then find the common repositories, then find the highly relevant repositories, finally recommend top k those repositories. & Users and repositories & Recommended repositories for each user & N/A & N/A \\
     \hline
-    \cite{liu_recommending_2018} & Github repositories recommendation for users & Input the repositories to be recommended into a neural network, then train the neural network to out put the top K repositories. & Users and repositories & Recommended repositories for each user & N/A & N/A \\
+    \cite{liu_recommending_2018} & Github repositories recommendation for users & Input the repositories to be recommended into a neural network, then train the neural network to output the top K repositories. & Users and repositories & Recommended repositories for each user & N/A & N/A \\
     \hline
     \end{longtable}
     \label{tab:literature_review_matrix}
@@ -224,7 +223,7 @@ used limited side information and the recommendation is for papers not users. \t
 \chapter{Notations and Problem Formulation}
 Knowledge graph (KG) can be represented as entity-relation-entity triples $(head, relation, tail)$. The "head" and "tail" are entities. The "relation" is the relationship between the two entities. For example, $(user1, star, repository2)$ means that the user named "user1" starred the repository named "repository2". The relation "star" indicates how a user interacts with a repository. The relation in the entity-relation-entity triples is the same as the edge in the graph structure.
 
-\textit{We explored 2 types of entities and 4 types of relations.} They are shown in the table \ref{tab:edge_types}. "User" means users from GitHub. "Repository" means the repositories that are stored on GitHub. "watch" means an user watches a repository. "star" means an user stars a repository. "fork" means an user forks a repository. "own" means an user is the owner of a repository. 
+\textit{We explored 2 types of entities and 4 types of relations.} They are shown in the table \ref{tab:edge_types}. "User" means users from GitHub. "Repository" means the repositories that are stored on GitHub. "watch" means a user watches a repository. "star" means a user stars a repository. "fork" means a user forks a repository. "own" means a user is the owner of a repository. 
 
 \begin{center}
     \captionof{table}{Four types of edges}
@@ -256,7 +255,7 @@ Since relation in triples is directed. We added 4 types of reverse relations tha
     \label{tab:reverse_edge_types}
 \end{center}
 
-Users and repositories have features such as users' company name and repositories' description. \textit{We selected 3 features for users and 18 features for repositories as side information.} The selected features are listed in the table \ref{tab:user_features} and \ref{tab:repo_features}.
+Users and repositories have features such as the users' company name and repositories' description. \textit{We selected 3 features for users and 18 features for repositories as side information.} The selected features are listed in the table \ref{tab:user_features} and \ref{tab:repo_features}.
 
 \begin{center}
     \captionof{table}{The selected features of users}
@@ -308,9 +307,9 @@ We formulated the recommendation problem as follows. \textit{Given the input of 
 
 \chapter{Methods}
 \section{Solution overview}
-The framework of the KGNN model was shown in the figure \ref{fig:kgnn_framework}. \textit{There are mainly 4 steps that are KG construction, neural network calculation, prediction and training.} The KG construction step construct the KG from users, repositories and side information by using the Deep Graph Library (DGL) \cite{wang2019dgl}. The neural network calculation step calculates the representation of users and repositories based on the inputs from the KG. The prediction step first calculates the cosine similarity between the representation of users and repositories, then recommends the most similar repositories to users. The training step calculates the loss from the prediction and update the parameters of the neural network. The steps of neural network calculation, prediction and training forms a loop. The parameters are updated and the loss is reduced through the loop.
+The framework of the KGNN model was shown in the figure \ref{fig:kgnn_framework}. \textit{There are mainly 4 steps that are KG construction, neural network calculation, prediction and training.} The KG construction step construct the KG from users, repositories and side information by using the Deep Graph Library (DGL) \cite{wang2019dgl}. The neural network calculation step calculates the representation of users and repositories based on the inputs from the KG. The prediction step first calculates the cosine similarity between the representation of users and repositories, then recommends the most similar repositories to users. The training step calculates the loss from the prediction and updates the parameters of the neural network. The steps of neural network calculation, prediction and training form a loop. The parameters are updated and the loss is reduced through the loop.
 
-\textit{There are also some minor processes. Such as sub graph construction, negative edges sampling and hyper parameters tuning.} The step of the sub graph construction splits the constructed KG into training, validation and testing sub graphs. This is to train and tune the neural network. The step of the negative edge sampling randomly generates false edges, which do not exist in the real data set, between users and repositories. This is to make the neural network learn to avoid folding \cite{xin_folding_2017} in which the neural network may recommend a repository to an irrelevant user. The hyper parameters tuning step tuned the learning rate and drop out rate to maximize the learning performance of the neural network. We will detail them in the following sections.
+\textit{There are also some minor processes. Such as subgraph construction, negative edges sampling and hyperparameters tuning.} The step of the subgraph construction splits the constructed KG into training, validation and testing subgraphs. This is to train and tune the neural network. The step of the negative edge sampling randomly generates false edges, which do not exist in the real data set, between users and repositories. This is to make the neural network learn to avoid folding \cite{xin_folding_2017} in which the neural network may recommend a repository to an irrelevant user. The hyperparameters tuning step tuned the learning rate and drop out rate to maximize the learning performance of the neural network. We will detail them in the following sections.
  
 \begin{figure}[H]
     \centering
@@ -320,7 +319,7 @@ The framework of the KGNN model was shown in the figure \ref{fig:kgnn_framework}
 \end{figure}
 
 \section{KG construction}
-The collected users and repositories are numbered starting from 0 and presented in a form of tuple. The equation \ref{eq:users_tupple} indicates that there are $m$ users. The equation \ref{eq:repos_tupple} indicates that there are $n$ repositories. The tupples for the users and repositories then are inputted into the construction method provided by the DGL to create a graph object. 
+The collected users and repositories are numbered starting from 0 and presented in a form of a tuple. The equation \ref{eq:users_tupple} indicates that there are $m$ users. The equation \ref{eq:repos_tupple} indicates that there are $n$ repositories. The tuples for the users and repositories then are inputted into the construction method provided by the DGL to create a graph object. 
 
 \begin{equation}
     (0, 1, 2, ..., m)
@@ -332,7 +331,7 @@ The collected users and repositories are numbered starting from 0 and presented 
     \label{eq:repos_tupple}
 \end{equation}
 
-We encoded the features of the users and repositories to numbers since the neural network only accepts numbers. For example, the company name of an user is a string and cannot be inputted into a neural network directly. We convert strings to numbers by using a doc2vec model \cite{le_distributed_nodate} provided by Gensim \cite{rehurek_lrec} that converts variable lengths of strings into a fixed length of vectors. According to \cite{mikolov_efficient_2013}, the converted vectors is the representation of the strings. Some features are already numbers such as the size of the repository. So, no further processes needed. Some boolean features such as "has\_wiki" are encoded as 1 and 0 that respectively means true and false. The encoded features are then normalized between 0 and 1.
+We encoded the features of the users and repositories to numbers since the neural network only accepts numbers. For example, the company name of a user is a string and cannot be inputted into a neural network directly. We convert strings to numbers by using a doc2vec model \cite{le_distributed_nodate} provided by Gensim \cite{rehurek_lrec} that converts variable lengths of strings into a fixed length of vectors. According to \cite{mikolov_efficient_2013}, the converted vectors is the representation of the strings. Some features are already numbers such as the size of the repository. So, no further processes are needed. Some boolean features such as "has\_wiki" are encoded as 1 and 0 which respectively means true and false. The encoded features are then normalized between 0 and 1.
 
 The features of the users and repositories are presented as a matrix in which the rows indicates users or repositories and the columns indicates their features. The matrix \ref{matrix:user_feature} indicates that there are $m$ users and each user has a feature of dimension $n$. The matrix \ref{matrix:repo_feature} indicates that there are $j$ repositories and each repository has a feature of dimension $k$. The 2 matrices are attached to the graph object created above.
 
@@ -365,7 +364,7 @@ The features of the users and repositories are presented as a matrix in which th
 \textit{We sampled negative edges with the amount as the same as the positive edges.} The negative training, validation and testing graph were constructed from those negative edges.
 
 \section{Neural network design}
-Figure \ref{fig:kgnn_structure} shows the structure of the KGNN model. The neural network for the knowledge graph contains 3 layers that are the embedding layer, hidden layer and output layer. The embedding layer contains 2 sub single layer neural networks that are used to embedding users and repositories. The hidden layer is a graph convolutional network (GCN) \cite{kipf_semi-supervised_2017} layer that contains 4 sub GCN layers respectively for the 4 types of edges. The output of the 4 GCNs of the hidden layer will be aggregated with the sum aggregation. The output layer is also a GCN layer that contains 4 sub GCN layers. The output of the 4 GCNs of the output layer will also be aggregated with the sum aggregation. The output contains learned users' representation and repositories' representation.
+Figure \ref{fig:kgnn_structure} shows the structure of the KGNN model. The neural network for the knowledge graph contains 3 layers that are the embedding layer, hidden layer and output layer. The embedding layer contains 2 sub single layer neural networks that are used to embed users and repositories. The hidden layer is a graph convolutional network (GCN) \cite{kipf_semi-supervised_2017} layer that contains 4 sub GCN layers respectively for the 4 types of edges. The output of the 4 GCNs of the hidden layer will be aggregated with the sum aggregation. The output layer is also a GCN layer that contains 4 sub GCN layers. The output of the 4 GCNs of the output layer will also be aggregated with the sum aggregation. The output contains learned users' representation and repositories' representation.
 
 \begin{figure}[H]
     \centering
@@ -383,7 +382,7 @@ Nodes in the GCN will go through the process of message passing and aggregation 
 
 The $h_u$ means the representation of the current node. The $\delta$ means the activation function. The $N(u)$ means the neighbour nodes of the current node. The $h_v$ means one of the neighbour nodes of the current node.
 
-The output representation vectors of the neural network should be similar for nodes who have positive edges and dissimilar for those who have negative edges.
+The output representation vectors of the neural network should be similar for nodes that have positive edges and dissimilar for those who have negative edges.
 
 \section{Prediction}
 The prediction process uses the learned representation vectors of users and repositories to calculate the similarity score between them. The recommender system then recommends the top $K$ most similar repositories to users.
@@ -407,10 +406,10 @@ To make the neural network learn to output the expected representations, we used
 The $m$ means the number of types of edges (in this case it is 4). The $e$ means the number of edges. The $f$ means the cosine similarity. The $n_u$ and $n_v$ means the source and destination nodes for the negative edge $j$. The $p_u$ and $p_v$ means the source and destination nodes for the positive edge $j$. The $\Delta$ is the correction parameter that prevents the loss from becoming zero.
 
 \subsection{Evaluation metrics for training}
-We use AUC score to evaluate the training process. The AUC score is calculated as the area under the ROC curve. It has the range of 0 to 1. The higher the score means the better the performance.
+We use the AUC score to evaluate the training process. The AUC score is calculated as the area under the ROC curve. It has a range of 0 to 1. The higher the score means the better the performance.
 
 \subsection{Training results}
-The KGNN was trained with the PyTorch library and Adam optimizer in 100 epochs. We found that the training loss decreased sharply at the beginning and stays stable at around the epoch of 80 (see \ref{fig:training_loss}). However, the validation loss is always lower than the training loss. This is because the drop out behaviour of the neural network is suspended when calculating the validation loss. So, the validation loss can be lower than the training loss. Also, the validation graph has fewer edges than that of the training graph. It leads to fewer positive numbers in the loss and the hinge loss function simply ignores the numbers below 0. 
+The KGNN was trained with the PyTorch library and Adam optimizer in 100 epochs. We found that the training loss decreased sharply at the beginning and stays stable at around the epoch of 80 (see \ref{fig:training_loss}). However, the validation loss is always lower than the training loss. This is because the dropout behaviour of the neural network is suspended when calculating the validation loss. So, the validation loss can be lower than the training loss. Also, the validation graph has fewer edges than that of the training graph. It leads to fewer positive numbers in the loss and the hinge loss function simply ignores the numbers below 0. 
 
 From the figure \ref{fig:training_loss} and \ref{fig:auc}, we can see that the validation loss does not change too much after 40 epochs and the AUC score decreases after 60 epochs. It indicates that we can stop training at the epoch of around 40 to 60.
 
@@ -480,7 +479,7 @@ From the figure \ref{fig:user_repo_dist_hist} and \ref{fig:user_repo_dist_bar}, 
 
 \section{Baseline models}
 \subsection{TF-IDF approach}
-A TF-IDF approach proposed by \cite{sun_personalized_2018} was used as a baseline model for the evaluation of the KGNN based model. TF-IDF means term frequency and inverse document frequency which calculates the ratio between the frequency of the appearance of a term and the frequency of documents that contains the term. It can be used to measure the similarity between documents. The tf-idf vectors of documents with a similar topic tend to be similar.
+A TF-IDF approach proposed by \cite{sun_personalized_2018} was used as a baseline model for the evaluation of the KGNN based model. TF-IDF means term frequency and inverse document frequency which calculates the ratio between the frequency of the appearance of a term and the frequency of documents that contains the term. It can be used to measure the similarity between documents. The TF-IDF vectors of documents with a similar topic tend to be similar.
 
 This TF-IDF approach calculates the TF-IDF vectors for readme files and source code for all repositories. Based on those TF-IDF vectors, the 2 similarity matrices between repositories can be constructed (one for the readme files and another one for the source code). The final similarity score between repositories is calculated by combining the 2 matrices using the equation \ref{eq:sim_repositories}. After the calculation of the similarity matrix, the algorithm recommends the most similar repositories to users.
 
@@ -490,7 +489,7 @@ This TF-IDF approach calculates the TF-IDF vectors for readme files and source c
     \label{eq:sim_repositories}
 \end{gather}
 
-The $\alpha$ and $\beta$ are hyper parameters meant to control the weight of the 2 types of similarities. They are tuned to 0.9 and 0.1 respectively in this experiment.
+The $\alpha$ and $\beta$ are hyperparameters meant to control the weight of the 2 types of similarities. They are tuned to 0.9 and 0.1 respectively in this experiment.
 
 \subsection{Collaborate filtering approach}
 A collaborative approach \cite{guendouz_recommending_2015} was also used as a baseline model for the evaluation of the KGNN based model. This approach measures the similarities between users and recommends the most "co-rated" repositories from the most similar users. The similarity measurement is the number of interactions (such as the number of stars).
@@ -519,7 +518,7 @@ A collaborative approach \cite{guendouz_recommending_2015} was also used as a ba
     \label{alg:similar}
 \end{algorithm}
 
-The algorithm \ref{alg:similar} shows the pseudocode of measuring the similarity between users. The algorithem \ref{alg:ratings} shows the pseudocode of calculating the most rated common repositories between similar users. The top k most rated common repositories from the most similar users will be recommended.
+The algorithm \ref{alg:similar} shows the pseudocode of measuring the similarity between users. The algorithm \ref{alg:ratings} shows the pseudocode of calculating the most rated common repositories between similar users. The top k most rated common repositories from the most similar users will be recommended.
 
 \begin{algorithm}[H]
     \DontPrintSemicolon
@@ -552,7 +551,7 @@ Since traditional recommender systems suffer from data sparsity and cold start i
 
 \section{Evaluation metrics for comparison}
 \subsection{Hit rate}
-The hit rate measures the ratio between hitted repositories and all the repositories recommended. If a recommended repository is on the list of users' repositories, then it means a hit. The higher the ratio means the more accurate the recommendation. It does not consider the ranking order of the relevance of recommended repositories. The equation \ref{eq:hit_rate} shows how this metric is calculated.
+The hit rate measures the ratio between hit repositories and all the repositories recommended. If a recommended repository is on the list of users' repositories, then it means a hit. The higher the ratio means the more accurate the recommendation. It does not consider the ranking order of the relevance of recommended repositories. The equation \ref{eq:hit_rate} shows how this metric is calculated.
 
 \begin{equation}
     HitRate=\frac{R_{hit}}{R_{hit}+R_{missed}}
@@ -560,7 +559,7 @@ The hit rate measures the ratio between hitted repositories and all the reposito
 \end{equation}
 
 \subsection{Mean Reciprocal Rank}
-While hit rate does not evaluate the ranking order of recommendations, Mean Reciprocal Rank (MRR) evaluates the accuracy of the ranking order of the most relevant recommendation. The equation \ref{eq:mrr} shows how it is calculated. The $Q$ means the total number of querys (each query can be seen as the recommendations for a specific user). The $rank_i$ means the rank of the most relevant recommendation.
+While hit rate does not evaluate the ranking order of recommendations, Mean Reciprocal Rank (MRR) evaluates the accuracy of the ranking order of the most relevant recommendation. The equation \ref{eq:mrr} shows how it is calculated. The $Q$ means the total number of queries (each query can be seen as the recommendations for a specific user). The $rank_i$ means the rank of the most relevant recommendation.
 
 \begin{equation}
     MRR=\frac{1}{Q}\sum_{i=1}^Q\frac{1}{rank_i}
@@ -570,9 +569,9 @@ While hit rate does not evaluate the ranking order of recommendations, Mean Reci
 \subsection{Normalized Discounted Cumulative Gain}
 Normalized Discounted Cumulative Gain (NDCG) evaluates the quality of the rank of the recommendations. Unlike MRR only evaluates one single item rank of a recommendation, NDCG evaluates the ranks of all the items of a recommendation. The Discounted Cumulative Gain(DCG) and Ideal Discounted Cumulative Gain(IDCG) need to be calculated, then normalized to produce the NDCG score. 
 
-DCG is calculated by summing all the relevance socre, which is discounted by a log function of its position, of the recommendations. In this experiment, the relevance score is defined in the table \ref{tab:relevance_score}. If a recommended repository is in the user's watch list, then it gets a relevance score of 1. The equation \ref{eq:dcg} shows how the DCG is calculated. The $k$ means the number of recommended repositories.
+DCG is calculated by summing all the relevance scores, which is discounted by a log function of its position, of the recommendations. In this experiment, the relevance score is defined in the table \ref{tab:relevance_score}. If a recommended repository is in the user's watch list, then it gets a relevance score of 1. The equation \ref{eq:dcg} shows how the DCG is calculated. The $k$ means the number of recommended repositories.
 
-IDCG is the best DCG the recommender system can achive (like an upper bound). In IDCG, the highest relevance score will rank before the lowest ones. Since the relevance score is discounted by their position, so the descending order of the relevance score will achieve the best DCG.
+IDCG is the best DCG the recommender system can achieve (like an upper bound). In IDCG, the highest relevance score will rank before the lowest one. Since the relevance score is discounted by their position, so the descending order of the relevance score will achieve the best DCG.
 
 The NDCG is the normalized DCG. The equation \ref{eq:ndcg} shows how it is calculated.
 
@@ -601,7 +600,7 @@ The NDCG is the normalized DCG. The equation \ref{eq:ndcg} shows how it is calcu
 \end{equation}
 
 \section{Results}
-Since the data set is imbalanced (most users have fewer repositories while few users have more than 20 repositories), we splitted the results into 4 groups based on the number of repositories to study the performance in different groups. The groups is shown in the table \ref{tab:4_groups}. "Group 0 to 5" means that the users in this group have 0 to 5 (not include 5) repositories. If the repositories of the users are less than the designated top $k$, then the recommender will recommend the same amount of repositories of the users.
+Since the data set is imbalanced (most users have fewer repositories while few users have more than 20 repositories), we split the results into 4 groups based on the number of repositories to study the performance in different groups. The groups are shown in the table \ref{tab:4_groups}. "Group 0 to 5" means that the users in this group have 0 to 5 (not including 5) repositories. If the repositories of the users are less than the designated top $k$, then the recommender will recommend the same amount of repositories of the users.
 
 \begin{center}
     \captionof{table}{4 groups}
@@ -617,7 +616,7 @@ Since the data set is imbalanced (most users have fewer repositories while few u
     \label{tab:4_groups}
 \end{center}
 
-To investigate whether the KGNN model can solve the cold start issue, we examed the recommendation performance in users who have only 1 repositories. The KGNN model can recommend repositories to users who have no repositories in the training data set once it learns the representation of the users and repositories.
+To investigate whether the KGNN model can solve the cold start issue, we examed the recommendation performance in users who have only 1 repository. The KGNN model can recommend repositories to users who have no repositories in the training data set once it learns the representation of the users and repositories.
 
 \subsection{Overall performance}
 The table \ref{tab:overall_performance} shows the overall performance for top 10, top 15 and top 20 recommendations. The performance of the KGNN model surpassed the baseline models significantly in all the metrics.
@@ -714,7 +713,7 @@ Based on the table \ref{tab:mrr_group_performance}, the MRR of the group "5 to 1
 \end{center}
 
 \subsection{NDCG rate group performance}
-According to the table \ref{tab:ndcg_group_performance}, the group "15 and over" has the highest NDCG for all models and top $k$s. The NDCG of baseline models do not change too much across different top $k$s. The NDCG of the KGNN model surpassed baseline models significantly. \textit{It means that the KGNN model is more accurate in ranking each repositories in a recommendation to the right position.}
+According to the table \ref{tab:ndcg_group_performance}, the group "15 and over" has the highest NDCG for all models and top $k$s. The NDCG of baseline models does not change too much across different top $k$s. The NDCG of the KGNN model surpassed baseline models significantly. \textit{It means that the KGNN model is more accurate in ranking each repository in a recommendation to the right position.}
 
 \begin{center}
     \captionof{table}{NDCG group performance}
@@ -744,7 +743,7 @@ According to the table \ref{tab:ndcg_group_performance}, the group "15 and over"
 \end{center}
 
 \subsection{Performance of solving the cold start issue}
-To test whether the KGNN model can solve the cold start issue, we had a look at the performance of the recommendation in users who have only 1 repository in the test data set. Since there is only 1 repository, so the results of MRR and NDCG metric are the same as the hit rate metric. We only list the performance of the hit rate in the table \ref{tab:top_1_recommendation}.
+To test whether the KGNN model can solve the cold start issue, we had a look at the performance of the recommendation in users who have only 1 repository in the test data set. Since there is only 1 repository, so the results of the MRR and NDCG metric are the same as the hit rate metric. We only list the performance of the hit rate in the table \ref{tab:top_1_recommendation}.
 
 \begin{center}
     \captionof{table}{Top 1 recommendation}
@@ -760,33 +759,33 @@ To test whether the KGNN model can solve the cold start issue, we had a look at 
     \label{tab:top_1_recommendation}
 \end{center}
 
-The performance of the KGNN model of solving cold start issue is not promising as solving the data sparsity issue. However, its performance is still significantly better than that of baseline models.
+The performance of the KGNN model of solving the cold start issue is not promising as solving the data sparsity issue. However, its performance is still significantly better than that of baseline models.
 
 \section{Discussion}
 According to the results of the 3 metrics, the KGNN model has the highest performance while other models have an extremely poor performance. The random recommendation model has the poorest performance due to the highly sparse data set.
 
 In the hit rate metric, the performance of the KGNN model is far better than the baseline models. \textit{This is because the baseline models suffer from data sparsity while the KGNN model can learn some hidden relationships between users and repositories from side information to fight against the data sparsity issue.}
 
-In the MRR metric, the performance of the TF-IDF model is close to the that of the KGNN model when the group is "5 to 10", "10 to 15" and "15 and over". The performance of the CF model is around 10 times poorer than that of the KGNN and TF-IDF model due to the data sparsity issue.
+In the MRR metric, the performance of the TF-IDF model is close to that of the KGNN model when the group is "5 to 10", "10 to 15" and "15 and over". The performance of the CF model is around 10 times poorer than that of the KGNN and TF-IDF model due to the data sparsity issue.
 
-The MRR performance in the group "0 to 5" is the poorest for all the 4 models. The reason may be that the number of repositories for it to calculate the hidden relationship is scarce in the group of "0 to 5" since it has at most 5 repositories. The random recommendation model has a near 0 performance in the group "0 to 5" and "5 to 10". It is understandable because the probability for it to hit is low in this data set.
+The MRR performance in the group "0 to 5" is the poorest for all 4 models. The reason may be that the number of repositories for it to calculate the hidden relationship is scarce in the group of "0 to 5" since it has at most 5 repositories. The random recommendation model has a near 0 performance in the group "0 to 5" and "5 to 10". It is understandable because the probability for it to hit is low in this data set.
 
 This means the KGNN model is better than the baseline models in ranking the most relevant repositories. The TF-IDF model is also promising when the number of repositories per user is greater than 5.
 
-In the NDCG metric, the performance of the KGNN model is far better than the baseline models. It means that the KGNN model recommends repositories with the relevance ranked in the right position with a high accuracy. The TF-IDF model is the second best model to recommend repositories ranked in the right position.
+In the NDCG metric, the performance of the KGNN model is far better than the baseline models. It means that the KGNN model recommends repositories with relevance ranked in the right position with high accuracy. The TF-IDF model is the second best model to recommend repositories ranked in the right position.
 
-According to the performance of solving the cold start issues, the KGNN model are better than the baseline models. When it comes to the cold start issues, the TF-IDF and CF models cannot find similar users or repositories for the new users and thus have a poor performance. \textit{While the KGNN model can use side information to improve the performance.} Based on the table \ref{tab:top_1_recommendation}, the performance was not improved too much but it demonstrated that \textit{the KGNN model has the ability to solve the cold start issue.}
+According to the performance of solving the cold start issues, the KGNN model is better than the baseline models. When it comes to the cold start issues, the TF-IDF and CF models cannot find similar users or repositories for the new users and thus have a poor performance. \textit{While the KGNN model can use side information to improve the performance.} Based on the table \ref{tab:top_1_recommendation}, the performance was not improved too much but it demonstrated that \textit{the KGNN model can solve the cold start issue.}
 
 \subsection{RQ1}
 Based on the experiment result for all top $k$s, the hit rate of the KGNN model can reach around 0.7. The MRR score can reach around 0.3. The NDCG score and reach around 0.7. The performance is the best among the baseline models.
 
 \subsection{RQ2}
-Based on the experiment result, the KGNN model can solve the data sparsity issue which means it can recommend repositories with a reasonable accuracy in the data set with a high sparsity. It can also mitigate the cold start issue compared with the baseline models. According to the result \ref{tab:top_1_recommendation}, the KGNN model can recommend repositories with an accuracy of 0.2 to new users who have no similar users or repositories in the data set.
+Based on the experiment result, the KGNN model can solve the data sparsity issue which means it can recommend repositories with reasonable accuracy in the data set with a high sparsity. It can also mitigate the cold start issue compared with the baseline models. According to the result \ref{tab:top_1_recommendation}, the KGNN model can recommend repositories with an accuracy of 0.2 to new users who have no similar users or repositories in the data set.
 
 \chapter{Conclusion}
-We proposed a KGNN based recommender system for GitHub to solve the data sparsity and cold start issues. The KG was firstly constructed from users, repositories and their side information. The KG was then inputted into the neural network to learn the representation of users and repositories. The learned representations are vectors. The loss function and training process made those vectors close in the representation space if there is a link between the users and repositories in the KG. Otherwise the vectors will be far away. We used cosine distance to measure the distance between those representations and recommend the closest repositories to users.
+We proposed a KGNN based recommender system for GitHub to solve the data sparsity and cold start issues. The KG was firstly constructed from users, repositories and their side information. The KG was then inputted into the neural network to learn the representation of users and repositories. The learned representations are vectors. The loss function and training process made those vectors close in the representation space if there is a link between the users and repositories in the KG. Otherwise, the vectors will be far away. We used cosine distance to measure the distance between those representations and recommend the closest repositories to users.
 
-We found that the performance for all the metrics of the KGNN model is far better than baseline models in a highly sparse data set. \textit{The experiment result shows that the impact of data sparsity issue can be reduced significantly by using side information through the KGNN model.} However, the performance can still be improved. There are other side information that can be included such as the social relationships between users. The cold start issue can also be further mitigated. The hit rate is 0.2 for the cold start group (the group of users who have only 1 repository). It is not as good as that of other groups but still acceptable. Since there is no similar users or repositories for a model to learn hidden relationships.
+We found that the performance for all the metrics of the KGNN model is far better than baseline models in a highly sparse data set. \textit{The experiment result shows that the impact of the data sparsity issue can be reduced significantly by using side information through the KGNN model.} However, the performance can still be improved. There is other side information that can be included such as the social relationships between users. The cold start issue can also be further mitigated. The hit rate is 0.2 for the cold start group (the group of users who have only 1 repository). It is not as good as that of other groups but still acceptable. Since there is no similar users or repositories for a model to learn hidden relationships.
 
 Future work will explore the relationship between users (such as the following behaviour) to further improve the performance of the KGNN model in reducing the impact of data sparsity and cold start issues. The random walk and sampling techniques will also be integrated to enable the model to run on a larger scale.
 
